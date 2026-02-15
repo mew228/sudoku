@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #E5E5E5;
+}
+
+@theme {
+  --color-lumina-black: #000000;
+  --color-lumina-platinum: #E5E5E5;
+  --color-lumina-silver: #B0C4DE;
+  --color-lumina-blue: #00F0FF;
+
+  --font-mono: Space Mono, monospace;
+  --font-tactical: Rajdhani, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-tactical), sans-serif;
+}
+
+/* Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #000;
+}
+::-webkit-scrollbar-thumb {
+  background: #00F0FF33;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00F0FF88;
+}
+
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+  .animate-scanline {
+    animation: scanline 2s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
