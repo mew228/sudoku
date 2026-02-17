@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  /* Classy Light Theme Palette - FORCED LIGHT */
+  --background: #f8fafc; /* Slate 50 */
+  --foreground: #1e293b; /* Slate 800 */
+
+  /* Primary Blue/Indigo */
+  --primary: #4f46e5; /* Indigo 600 */
+  --primary-foreground: #ffffff;
+
+  /* Accent / Selection */
+  --accent: #e0e7ff; /* Indigo 100 */
+  --accent-foreground: #3730a3; /* Indigo 900 */
+
+  /* Sudoku Specific */
+  --cell-bg: #ffffff;
+  --cell-bg-selected: #c7d2fe; /* Indigo 200 */
+  --cell-bg-highlight: #eef2ff; /* Indigo 50 */
+  --cell-text: #1e293b;
+  --cell-text-user: #4338ca; /* Indigo 700 */
+  --cell-border: #94a3b8; /* Slate 400 */
+  
+  /* UI Elements */
+  --button-secondary: #f1f5f9; /* Slate 100 */
+  --button-secondary-hover: #e2e8f0; /* Slate 200 */
+}
+
+/* Force light theme even if system prefers dark for now to satisfy user request */
+/* @media (prefers-color-scheme: dark) { ... } REMOVED TO FORCE LIGHT */
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+}
