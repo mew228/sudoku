@@ -1,10 +1,10 @@
-# 🧩 Aura Elite: Sudoku Terminal
+#Sudoku 
 
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://sudoku-228.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 
-A premium, high-performance Sudoku experience built for the Aura Elite ecosystem. Featuring advanced logic-based hints, real-time PvP matchmaking, and a stunning "Glassmorphic" interface.
+A premium, high-performance Sudoku experience built for the Elite ecosystem. Featuring advanced logic-based hints, real-time PvP matchmaking, and a stunning "Glassmorphic" interface.
 
 [**Live Demo »**](https://sudoku-228.vercel.app)
 
