@@ -72,7 +72,7 @@ export default function Home() {
           {/* Left/Top: Header & Board */}
           <div className="flex flex-col gap-6 items-center w-full max-w-[600px]">
             {/* Top Bar with Difficulty (Desktop) */}
-            <div className="hidden lg:flex w-full justify-between items-center text-slate-500 font-medium px-2">
+            <div className="flex flex-wrap lg:flex-nowrap w-full justify-center lg:justify-between items-center text-slate-500 font-medium px-2 gap-y-4">
               <div className="flex gap-4 text-sm">
                 <span className="text-slate-400 font-semibold uppercase tracking-wider text-xs">Difficulty</span>
                 {(['Easy', 'Medium', 'Hard', 'Expert'] as const).map(diff => (
@@ -87,7 +87,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <div className="text-3xl font-bold text-slate-800 font-mono">
+              <div className="hidden lg:block text-3xl font-bold text-slate-800 font-mono">
                 <Timer />
               </div>
             </div>
