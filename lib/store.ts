@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { generateSudoku, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
 import { getSmartHint, HintResult } from './logic/hints';
+import { updateProgress } from './firebase/rooms';
+import { addScore } from './firebase/leaderboard';
 
 interface GameState {
     board: number[][];
@@ -164,9 +166,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
             const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
 
-            import('./firebase/rooms').then(({ updateProgress }) => {
-                updateProgress(roomId, playerId!, progress, currentMistakes, isWon ? 'won' : (currentMistakes >= maxMistakes ? 'lost' : 'playing'));
-            });
+            // Send update to Firebase
+            // console.log(`Sending Update: ${progress}% for ${playerId} in ${roomId}`);
+            updateProgress(roomId, playerId, progress, currentMistakes, isWon ? 'won' : (currentMistakes >= maxMistakes ? 'lost' : 'playing'))
+                .catch(err => console.error("Failed to update progress:", err));
         }
 
         // Save to Leaderboard on Win (Any mode)
@@ -174,11 +177,9 @@ export const useGameStore = create<GameState>((set, get) => ({
             const { timer, difficulty } = get();
             // We use a timeout to not block the UI or state update
             setTimeout(() => {
-                import('./firebase/leaderboard').then(({ addScore }) => {
-                    // Use playerId if available, otherwise "Guest"
-                    const name = playerId || "Guest";
-                    addScore(name, timer, difficulty);
-                });
+                // Use playerId if available, otherwise "Guest"
+                const name = playerId || "Guest";
+                addScore(name, timer, difficulty).catch(console.error);
             }, 0);
         }
 

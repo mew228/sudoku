@@ -106,11 +106,11 @@ export const PvPArena = () => {
             <div className="flex flex-col gap-8 w-full max-w-sm mt-8 lg:mt-12">
 
                 {/* Stats Row */}
-                <div className="flex justify-between items-center text-slate-600 font-medium px-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center text-slate-600 font-medium px-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
                     <div className="flex flex-col">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Mistakes</span>
                         <div className="flex items-baseline gap-1">
-                            <span className={`text-3xl font-light ${mistakes >= 3 ? 'text-rose-500' : 'text-slate-800'}`}>
+                            <span className={`text-4xl font-light ${mistakes >= 3 ? 'text-rose-500' : 'text-slate-800'}`}>
                                 {mistakes}
                             </span>
                             <span className="text-sm text-slate-300 font-bold">/3</span>

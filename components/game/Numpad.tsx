@@ -27,11 +27,16 @@ export const Numpad = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleDrag = (_: any, info: PanInfo) => {
+        // Simple throttle: only update if point moved significantly or restrict frequency
+        // For now, rely on Framer Motion's internal checks but ensure we don't spam store
         const point = info.point;
         const cell = getCellFromPoint(point.x, point.y);
 
-        // Update hover state in store to show visual feedback
-        useGameStore.getState().setHoveredCell(cell);
+        // Optimization: Only update if cell changed
+        const currentHover = useGameStore.getState().hoveredCell;
+        if (cell?.r !== currentHover?.r || cell?.c !== currentHover?.c) {
+            useGameStore.getState().setHoveredCell(cell);
+        }
     };
 
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo, num: number) => {
@@ -53,7 +58,7 @@ export const Numpad = () => {
     };
 
     return (
-        <div className="grid grid-cols-3 gap-2 w-full">
+        <div className="grid grid-cols-3 gap-2 w-full touch-none">
             {numbers.map((num) => (
                 <motion.div
                     key={num}
@@ -65,15 +70,15 @@ export const Numpad = () => {
                     onDragStart={handleDragStart}
                     onDrag={handleDrag}
                     onDragEnd={(e, info) => handleDragEnd(e, info, num)}
-                    onPointerDown={() => {
+                    onPointerDown={(e) => {
                         // Prevent default touch behaviors that might interfere
-                        // but DON'T stop propagation or you kill the drag
+                        e.preventDefault();
                     }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.90 }}
                     onClick={() => setCellValue(num)} // Keep click for accessibility/speed
                     className="aspect-[4/3] flex items-center justify-center text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none"
-                    style={{ touchAction: 'none' }} // Hint for touch devices, though HTML5 DnD is desktop focused usually.
+                    style={{ touchAction: 'none' }} // Hint for touch devices
                 >
                     {num}
                 </motion.div>

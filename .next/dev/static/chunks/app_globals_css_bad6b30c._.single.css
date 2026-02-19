@@ -783,6 +783,10 @@
     cursor: pointer;
   }
 
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
   .touch-none {
     touch-action: none;
   }
@@ -921,11 +925,6 @@
   .border-\[0\.5px\] {
     border-style: var(--tw-border-style);
     border-width: .5px;
-  }
-
-  .border-t {
-    border-top-style: var(--tw-border-style);
-    border-top-width: 1px;
   }
 
   .\!border-r-2 {
@@ -1281,10 +1280,6 @@
 
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
-  }
-
-  .pt-4 {
-    padding-top: calc(var(--spacing) * 4);
   }
 
   .text-center {
@@ -1857,12 +1852,6 @@
   @media (hover: hover) {
     .hover\:bg-slate-800:hover {
       background-color: var(--color-slate-800);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:text-indigo-500:hover {
-      color: var(--color-indigo-500);
     }
   }
 

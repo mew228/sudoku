@@ -29,7 +29,7 @@ export const Board = () => {
                 Background is slate-800 to form the thick outer border.
                 Cells handle their own inner borders.
             */}
-            <div className="grid grid-cols-9 grid-rows-9 h-full w-full bg-white">
+            <div className="grid grid-cols-9 grid-rows-9 h-full w-full bg-white touch-manipulation">
                 {board.map((row, r) => (
                     row.map((val, c) => (
                         <Cell
