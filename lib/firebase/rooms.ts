@@ -137,9 +137,25 @@ export const joinRoom = async (roomId: string, playerName: string) => {
  * Subscribe to real-time room updates.
  * Returns an unsubscribe function.
  */
+/**
+ * Subscribe to real-time room updates.
+ * Returns an unsubscribe function.
+ */
 export const subscribeToRoom = (roomId: string, callback: (room: Room) => void) => {
     const roomRef = ref(getDb(), `rooms/${roomId}`);
     return onValue(roomRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) callback(data);
+    });
+};
+
+/**
+ * Optimized subscription for gameplay - only listens to player changes.
+ * drastic bandwidth reduction compared to full room subscription.
+ */
+export const subscribeToPlayers = (roomId: string, callback: (players: Room['players']) => void) => {
+    const playersRef = ref(getDb(), `rooms/${roomId}/players`);
+    return onValue(playersRef, (snapshot) => {
         const data = snapshot.val();
         if (data) callback(data);
     });

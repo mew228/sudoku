@@ -34,23 +34,27 @@ export const PvPArena = () => {
     }, [opponentStatus, status]);
 
     // Effect to subscribe to room updates (for opponent progress/status)
+    // Effect to subscribe to room updates (for opponent progress/status)
     useEffect(() => {
         if (!roomId || !playerId) return;
 
-        const unsubscribe = subscribeToRoom(roomId, (room) => {
-            // Find opponent
-            const opponent = Object.values(room.players || {}).find(p => p.name !== playerId);
-            if (opponent) {
-                setMultiplayerState({
-                    opponentName: opponent.name,
-                    opponentProgress: opponent.progress,
-                    opponentStatus: opponent.status
-                });
-            }
-        });
+        // Use optimized player subscription to avoid re-fetching the board on every move
+        import('@/lib/firebase/rooms').then(({ subscribeToPlayers }) => {
+            const unsubscribe = subscribeToPlayers(roomId, (players) => {
+                // Find opponent
+                const opponent = Object.values(players || {}).find((p: any) => p.name !== playerId) as any;
+                if (opponent) {
+                    setMultiplayerState({
+                        opponentName: opponent.name,
+                        opponentProgress: opponent.progress,
+                        opponentStatus: opponent.status
+                    });
+                }
+            });
 
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
+            // Cleanup subscription on unmount
+            return () => unsubscribe();
+        });
     }, [roomId, playerId, setMultiplayerState]);
 
     return (
