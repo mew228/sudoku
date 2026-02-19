@@ -39,10 +39,9 @@ export const PvPArena = () => {
     useEffect(() => {
         if (!roomId || !playerId) return;
 
-        // Subscribe to players
-        const unsubscribe = subscribeToPlayers(roomId, (players) => {
+        // Subscribe to players (for online status/mistakes)
+        const unsubPlayers = subscribeToPlayers(roomId, (players) => {
             setIsConnected(true);
-            // Find opponent
             const opponent = Object.values(players || {}).find((p: any) => p.name !== playerId) as any;
             if (opponent) {
                 setMultiplayerState({
@@ -53,8 +52,18 @@ export const PvPArena = () => {
             }
         });
 
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
+        // Subscribe to SHARED BOARD (Co-op)
+        import('@/lib/firebase/rooms').then(({ subscribeToBoard }) => {
+            subscribeToBoard(roomId, (remoteBoard) => {
+                if (remoteBoard) {
+                    useGameStore.getState().setRemoteBoard(remoteBoard);
+                }
+            });
+        });
+
+        return () => {
+            unsubPlayers();
+        };
     }, [roomId, playerId, setMultiplayerState]);
 
     return (

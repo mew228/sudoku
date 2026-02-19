@@ -11,7 +11,8 @@ export interface Room {
     id: string;
     status: 'waiting' | 'playing' | 'finished';
     difficulty: Difficulty;
-    initialBoard: number[][];
+    initialBoard: number[][]; // Where we started
+    currentBoard: number[][]; // Shared real-time board
     solvedBoard: number[][];
     players: {
         [uid: string]: {
@@ -66,11 +67,15 @@ export const createRoom = async (playerName: string, difficulty: Difficulty): Pr
 
     const { initial, solved } = generateSudoku(difficulty);
 
+    // Deep copy for currentBoard
+    const currentBoard = initial.map(row => [...row]);
+
     await set(ref(getDb(), `rooms/${code}`), {
         id: code,
         status: 'waiting',
         difficulty,
         initialBoard: initial,
+        currentBoard: currentBoard, // Set shared board
         solvedBoard: solved,
         players: {
             [sanitizeKey(playerName)]: {

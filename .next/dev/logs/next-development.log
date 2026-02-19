@@ -11,3 +11,282 @@
 [00:06:42.609] Server  LOG     ✓ Compiled in 93ms
 [00:06:45.518] Server  LOG     ✓ Compiled in 112ms
 [00:23:51.596] Server  LOG     ✓ Compiled in 110ms
+[00:26:34.246] Server  LOG     Initializing Firebase with config: {}
+[00:26:34.257] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:26:34.336] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:26:34.336] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:26:34.336] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:26:43.807] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:26:43.807] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:26:43.807] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:27:05.024] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:27:05.312] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:27:05.313] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:27:15.528] Browser LOG     Checking Room ID: Y6WXUU
+[00:33:38.146] Server  LOG     ✓ Compiled in 75ms
+[00:34:00.918] Server  LOG     ✓ Compiled in 68ms
+[00:34:01.615] Browser ERROR   ./lib/store.ts:113:30
+Parsing ecmascript source code failed
+  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  112 |         if (isNotesMode) {
+> 113 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  114 |             const newNotes = new Set(notes);
+  115 |             if (newNotes.has(noteKey)) {
+  116 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:01.615] Browser ERROR   ./lib/store.ts:113:30
+Parsing ecmascript source code failed
+  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  112 |         if (isNotesMode) {
+> 113 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  114 |             const newNotes = new Set(notes);
+  115 |             if (newNotes.has(noteKey)) {
+  116 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:32.609] Browser ERROR   ./lib/store.ts:113:30
+Parsing ecmascript source code failed
+  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  112 |         if (isNotesMode) {
+> 113 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  114 |             const newNotes = new Set(notes);
+  115 |             if (newNotes.has(noteKey)) {
+  116 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:32.610] Browser ERROR   ./lib/store.ts:113:30
+Parsing ecmascript source code failed
+  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  112 |         if (isNotesMode) {
+> 113 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  114 |             const newNotes = new Set(notes);
+  115 |             if (newNotes.has(noteKey)) {
+  116 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:34.615] Browser ERROR   ./lib/store.ts:118:30
+Parsing ecmascript source code failed
+  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  117 |         if (isNotesMode) {
+> 118 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  119 |             const newNotes = new Set(notes);
+  120 |             if (newNotes.has(noteKey)) {
+  121 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:34.615] Browser ERROR   ./lib/store.ts:118:30
+Parsing ecmascript source code failed
+  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  117 |         if (isNotesMode) {
+> 118 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  119 |             const newNotes = new Set(notes);
+  120 |             if (newNotes.has(noteKey)) {
+  121 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:48.619] Browser ERROR   ./lib/store.ts:118:30
+Parsing ecmascript source code failed
+  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  117 |         if (isNotesMode) {
+> 118 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  119 |             const newNotes = new Set(notes);
+  120 |             if (newNotes.has(noteKey)) {
+  121 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:34:48.619] Browser ERROR   ./lib/store.ts:118:30
+Parsing ecmascript source code failed
+  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
+  117 |         if (isNotesMode) {
+> 118 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  119 |             const newNotes = new Set(notes);
+  120 |             if (newNotes.has(noteKey)) {
+  121 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:36:00.619] Browser ERROR   ./lib/store.ts:116:30
+Parsing ecmascript source code failed
+  114 |         // Notes Mode (Local only for simplification)
+  115 |         if (isNotesMode) {
+> 116 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  117 |             const newNotes = new Set(notes);
+  118 |             if (newNotes.has(noteKey)) {
+  119 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:36:00.619] Browser ERROR   ./lib/store.ts:116:30
+Parsing ecmascript source code failed
+  114 |         // Notes Mode (Local only for simplification)
+  115 |         if (isNotesMode) {
+> 116 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  117 |             const newNotes = new Set(notes);
+  118 |             if (newNotes.has(noteKey)) {
+  119 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:36:01.461] Server  LOG     ✓ Compiled in 74ms
+[00:36:01.615] Browser ERROR   ./lib/store.ts:116:30
+Parsing ecmascript source code failed
+  114 |         // Notes Mode (Local only for simplification)
+  115 |         if (isNotesMode) {
+> 116 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  117 |             const newNotes = new Set(notes);
+  118 |             if (newNotes.has(noteKey)) {
+  119 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[00:36:01.615] Browser ERROR   ./lib/store.ts:116:30
+Parsing ecmascript source code failed
+  114 |         // Notes Mode (Local only for simplification)
+  115 |         if (isNotesMode) {
+> 116 |             const noteKey = `${ r },${ c },${ num } `;
+      |                              ^
+  117 |             const newNotes = new Set(notes);
+  118 |             if (newNotes.has(noteKey)) {
+  119 |                 newNotes.delete(noteKey);
+
+Expected ';', '}' or <eof>
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
