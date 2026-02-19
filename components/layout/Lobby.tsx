@@ -204,7 +204,7 @@ export const Lobby = () => {
                 <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={handleCreate}
-                    disabled={loading || !name.trim()}
+                    disabled={loading}
                     className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm tracking-wide hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-slate-300/30"
                 >
                     {loading ? (
@@ -235,7 +235,7 @@ export const Lobby = () => {
                     <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleJoin}
-                        disabled={loading || !name.trim() || !roomIdInput.trim()}
+                        disabled={loading}
                         className="px-6 py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-indigo-200/50"
                     >
                         {loading ? <Loader2 size={16} className="animate-spin" /> : 'Join'}

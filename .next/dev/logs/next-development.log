@@ -55,3 +55,14 @@
 [00:12:59.650] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [00:12:59.650] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
 [00:12:59.650] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:52:00.859] Server  LOG     ✓ Compiled in 95ms
+[00:57:40.611] Server  LOG     Initializing Firebase with config: {}
+[00:57:40.619] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:57:40.694] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:57:40.695] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:57:40.695] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:57:47.812] Browser LOG     Checking Room ID: FQ8AXY
+[00:58:26.510] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:58:26.510] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:58:26.510] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:59:22.980] Server  LOG     ✓ Compiled in 62ms
