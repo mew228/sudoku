@@ -6,9 +6,12 @@ import { Numpad } from "@/components/game/Numpad";
 import { Timer } from "@/components/game/Timer";
 import { HintToast } from "@/components/game/HintToast";
 import { Lobby } from "@/components/layout/Lobby";
+import { PvPArena } from "@/components/game/PvPArena";
+import { Leaderboard } from "@/components/game/Leaderboard"; // New import
 import { useGameStore } from "@/lib/store";
-import { useEffect } from "react";
-import { Users, User } from 'lucide-react';
+import { useEffect, useState } from "react"; // Added useState
+import { Users, User, Trophy } from 'lucide-react'; // Added Trophy
+import { AnimatePresence, motion } from "framer-motion"; // New import
 
 export default function Home() {
   const startGame = useGameStore(state => state.startGame);
@@ -16,17 +19,17 @@ export default function Home() {
   const status = useGameStore(state => state.status);
   const mode = useGameStore(state => state.mode);
   const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
-  const opponentName = useGameStore(state => state.opponentName);
-  const opponentProgress = useGameStore(state => state.opponentProgress);
   const mistakes = useGameStore(state => state.mistakes);
   const tickTimer = useGameStore(state => state.tickTimer);
+
+  const [showLeaderboard, setShowLeaderboard] = useState(false); // New state
 
   useEffect(() => {
     // Start single player by default only if not already set
     if (status === 'idle' && mode === 'single') {
       startGame(difficulty);
     }
-  }, []);
+  }, [status, mode, startGame, difficulty]);
 
   // Centralized Timer Logic
   useEffect(() => {
@@ -62,11 +65,24 @@ export default function Home() {
           <Users size={18} />
           <span className="hidden sm:inline font-medium">PvP</span>
         </button>
+        <button
+          onClick={() => setShowLeaderboard(true)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors border bg-white text-slate-700 border-slate-200 shadow-sm hover:text-indigo-600 hover:border-indigo-200`}
+        >
+          <Trophy size={18} />
+          <span className="hidden sm:inline font-medium">Rankings</span>
+        </button>
       </div>
 
-      {mode === 'pvp' && status !== 'playing' && status !== 'won' && status !== 'lost' ? (
-        <Lobby />
+      {mode === 'pvp' ? (
+        // PvP Mode: Show Lobby or Arena
+        (status === 'idle' || status === 'waiting') ? (
+          <Lobby />
+        ) : (
+          <PvPArena />
+        )
       ) : (
+        // Single Player Mode
         <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-7xl px-4 mt-12 lg:mt-0">
 
           {/* Left/Top: Header & Board */}
@@ -95,27 +111,6 @@ export default function Home() {
             {/* Game Board Container */}
             <div className="relative w-full aspect-square">
               <Board />
-
-              {/* PvP Opponent Progress */}
-              {mode === 'pvp' && status === 'playing' && opponentName && (
-                <div className="absolute -top-12 left-0 right-0 flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-slate-100 shadow-sm">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-[10px] font-black">
-                    {opponentName[0]?.toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-700 truncate">{opponentName}</span>
-                      <span className="text-[10px] font-bold text-slate-400">{opponentProgress}%</span>
-                    </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-rose-400 to-pink-500 rounded-full transition-all duration-500"
-                        style={{ width: `${opponentProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -174,6 +169,29 @@ export default function Home() {
           )}
         </div>
       )}
+      {/* Leaderboard Overlay */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <motion.div
+            key="leaderboard-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+            onClick={() => setShowLeaderboard(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
+              <Leaderboard />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

@@ -14,7 +14,7 @@ export const Board = () => {
         if (board.length === 0) {
             startGame('Medium');
         }
-    }, []);
+    }, [board.length, startGame]);
 
     if (board.length === 0) return null;
 

@@ -1,0 +1,43 @@
+
+> sudoku@0.1.0 lint
+> eslint
+
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\app\page.tsx
+  29:6  warning  React Hook useEffect has missing dependencies: 'difficulty', 'mode', 'startGame', and 'status'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\components\game\Board.tsx
+  17:8  warning  React Hook useEffect has missing dependencies: 'board.length' and 'startGame'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\components\game\Cell.tsx
+   1:16  warning  'useState' is defined but never used               @typescript-eslint/no-unused-vars
+  59:11  warning  'setCellValue' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\components\game\GameControls.tsx
+   2:10  warning  'Undo2' is defined but never used               @typescript-eslint/no-unused-vars
+   8:11  warning  'resetGame' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  52:98  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\components\game\Numpad.tsx
+   9:30  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  38:81  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:37  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\components\layout\Lobby.tsx
+  46:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  80:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\lib\firebase\firebase.ts
+  16:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\lib\logic\sudoku.ts
+  69:15  warning  'backup' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\MAHARSHI NATH\OneDrive\Documents\sudoku\lib\store.ts
+  2:26  warning  'solveSudoku' is defined but never used  @typescript-eslint/no-unused-vars
+  2:39  warning  'isValid' is defined but never used      @typescript-eslint/no-unused-vars
+
+✖ 18 problems (7 errors, 11 warnings)
+

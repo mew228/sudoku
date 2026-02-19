@@ -66,7 +66,7 @@ export function generateSudoku(difficulty: Difficulty): { initial: number[][], s
         }
 
         // Backup
-        const backup = initial[row][col];
+        // const backup = initial[row][col];
         initial[row][col] = BLANK;
 
         // Check if unique solution exists (simplified: just check if removing it made it unsolvable or ambiguous - for now assume standard removal is fine enough for this demo, or implement full unique check if needed. For speed, we'll stick to a probabilistic approach or just ensure at least 1 solution remains, which is guaranteed if we start from solved. Uniqueness is harder but let's trust the "attempts" heuristic for now.)

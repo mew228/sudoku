@@ -1,9 +1,16 @@
 {
   "rules": {
     "rooms": {
-      "$roomId": {
-        ".read": true,
-        ".write": true
+      ".read": true,
+      ".write": true
+    },
+    "leaderboard": {
+      ".read": true,
+      ".write": true,
+      "$difficulty": {
+        ".indexOn": [
+          "time"
+        ]
       }
     }
   }

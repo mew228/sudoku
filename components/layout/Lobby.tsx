@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { createRoom, joinRoom, subscribeToRoom } from '@/lib/firebase/rooms';
+import { db } from '@/lib/firebase/firebase';
+import { ref, get } from 'firebase/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, Users, ArrowLeft, Loader2, Swords } from 'lucide-react';
 
@@ -25,10 +27,10 @@ export const Lobby = () => {
         try {
             const id = await createRoom(name.trim(), 'Medium');
             setCreatedRoomId(id);
-            setMultiplayerState({ roomId: id, playerId: name.trim(), mode: 'pvp', status: 'idle' });
+            setMultiplayerState({ roomId: id, playerId: name.trim(), mode: 'pvp', status: 'waiting' });
 
             // Listen for opponent joining
-            subscribeToRoom(id, (room) => {
+            const unsubscribe = subscribeToRoom(id, (room) => {
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
@@ -41,10 +43,13 @@ export const Lobby = () => {
                     if (opponent) {
                         setMultiplayerState({ opponentName: opponent.name });
                     }
+                    unsubscribe(); // Stop listening from Lobby once game starts
                 }
             });
-        } catch (e: any) {
-            setError(e.message || "Failed to create room");
+        } catch (error: unknown) {
+            console.error("Lobby Create Error:", error);
+            const msg = error instanceof Error ? error.message : "Failed to create room";
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -62,7 +67,7 @@ export const Lobby = () => {
             await joinRoom(code, name.trim());
             setMultiplayerState({ roomId: code, playerId: name.trim(), mode: 'pvp' });
 
-            subscribeToRoom(code, (room) => {
+            const unsubscribe = subscribeToRoom(code, (room) => {
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
@@ -75,10 +80,13 @@ export const Lobby = () => {
                     if (opponent) {
                         setMultiplayerState({ opponentName: opponent.name });
                     }
+                    unsubscribe();
                 }
             });
-        } catch (e: any) {
-            setError(e.message || "Failed to join room");
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Failed to join room";
+            setError(msg);
+            alert(msg); // Force visible error for debugging
         } finally {
             setLoading(false);
         }
@@ -89,6 +97,27 @@ export const Lobby = () => {
         navigator.clipboard.writeText(createdRoomId);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+
+
+    const testConnection = async () => {
+        setLoading(true);
+        try {
+            if (!db) throw new Error("Database not initialized");
+
+            console.log("Testing connection...", db);
+            const testRef = ref(db, "status");
+
+            console.log("Getting snapshot...");
+            await get(testRef);
+            alert(`Firebase Connected!`);
+        } catch (e) {
+            console.error("Connection Test Failed:", e);
+            alert(`Connection Test Failed: ${e instanceof Error ? e.message : String(e)}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // --- "Waiting for Opponent" Screen ---
@@ -226,6 +255,8 @@ export const Lobby = () => {
                         </motion.p>
                     )}
                 </AnimatePresence>
+
+                {/* Debug Tool removed - connection verified */}
             </div>
         </motion.div>
     );

@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useGameStore } from '@/lib/store';
@@ -12,7 +12,7 @@ interface CellProps {
 }
 
 export const Cell = memo(({ r, c, val, initial }: CellProps) => {
-    const [isDragOver, setIsDragOver] = useState(false);
+
 
     // Optimizing selectors to avoid re-renders on timer tick
     const isSelected = useGameStore(useShallow(state => state.selectedCell?.r === r && state.selectedCell?.c === c));
@@ -38,6 +38,9 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
     // Hint glow — true when this cell was just revealed by a hint
     const isHinted = useGameStore(state => state.lastHint?.r === r && state.lastHint?.c === c);
 
+    // Hover state from drag and drop
+    const isHovered = useGameStore(useShallow(state => state.hoveredCell?.r === r && state.hoveredCell?.c === c));
+
     // Notes logic - purely selector based
     const cellNotes = useGameStore(useShallow(state => {
         if (val !== 0) return [];
@@ -50,48 +53,22 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
     const selectCell = useGameStore(state => state.selectCell);
 
-    // We need setCellValue here for drag and drop interactions
-    // Since we can't easily modify the store action signature without broader refactoring,
-    // we'll rely on selecting the cell first, then setting the value.
-    const setCellValue = useGameStore(state => state.setCellValue);
-
     const handleClick = () => selectCell(r, c);
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "copy";
-        if (!initial) { // Only allow drop on non-initial cells
-            setIsDragOver(true);
-        }
-    };
+    // HTML5 DnD handlers removed in favor of Framer Motion gesture handling in Numpad.tsx
 
-    const handleDragLeave = () => {
-        setIsDragOver(false);
-    };
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
 
-        if (initial) return; // Cannot modify initial cells
 
-        const numStr = e.dataTransfer.getData("text/plain");
-        const num = parseInt(numStr, 10);
-
-        if (!isNaN(num) && num >= 0 && num <= 9) { // Allow 0 for Eraser
-            // Select this cell first
-            useGameStore.getState().selectCell(r, c);
-            // Then set the value (synchronously updates based on selected cell)
-            useGameStore.getState().setCellValue(num);
-        }
-    };
 
     return (
         <div
             onClick={handleClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            data-cell-row={r}
+            data-cell-col={c}
+            // onDragOver={handleDragOver} // Removed
+            // onDragLeave={handleDragLeave} // Removed
+            // onDrop={handleDrop} // Removed
             className={cn(
                 "relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-200",
                 "text-2xl sm:text-3xl font-light select-none",
@@ -113,16 +90,17 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                     ? (isSelected ? "bg-red-600 text-white" : "bg-red-100 text-red-600")
                     : isSelected
                         ? "bg-indigo-600 text-white"
-                        : isDragOver
-                            ? "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-20"
-                            : isSameValue
-                                ? "bg-indigo-100 text-indigo-900"
-                                : isRelated
-                                    ? "bg-slate-100"
-                                    : "bg-white hover:bg-slate-50",
+                        : isSameValue // isDragOver removed or replaced with compatible visual state if needed later
+                            ? "bg-indigo-100 text-indigo-900"
+                            : isRelated
+                                ? "bg-slate-100"
+                                : "bg-white hover:bg-slate-50",
 
                 // Hint Golden Glow (layered on top)
                 isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20",
+
+                // Hover Highlight (Drag & Drop)
+                isHovered && !isSelected && !isError && "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-30",
 
                 // Dynamic Borders (Override structural borders)
                 isSelected && !isError && "!border-indigo-600 z-10",

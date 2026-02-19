@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { generateSudoku, solveSudoku, isValid, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
+import { generateSudoku, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
 import { getSmartHint, HintResult } from './logic/hints';
 
 interface GameState {
@@ -8,7 +8,7 @@ interface GameState {
     solvedBoard: number[][];
     notes: Set<string>; // stored as "row,col,num"
     difficulty: Difficulty;
-    status: 'idle' | 'playing' | 'won' | 'lost';
+    status: 'idle' | 'waiting' | 'playing' | 'won' | 'lost';
     timer: number;
     mistakes: number;
     maxMistakes: number;
@@ -17,6 +17,7 @@ interface GameState {
     selectedCell: { r: number, c: number } | null;
     hintsRemaining: number;
     lastHint: HintResult | null;
+    hoveredCell: { r: number, c: number } | null;
 
     // Multiplayer
     mode: 'single' | 'pvp' | 'bot';
@@ -40,6 +41,9 @@ interface GameState {
 
     // Hint
     getHint: () => void;
+
+    // Hover state for drag and drop
+    setHoveredCell: (cell: { r: number, c: number } | null) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -57,6 +61,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     selectedCell: null,
     hintsRemaining: 3,
     lastHint: null,
+    hoveredCell: null,
 
     mode: 'single',
     roomId: null,
@@ -160,8 +165,21 @@ export const useGameStore = create<GameState>((set, get) => ({
             const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
 
             import('./firebase/rooms').then(({ updateProgress }) => {
-                updateProgress(roomId, playerId, progress, currentMistakes, isWon ? 'won' : (currentMistakes >= maxMistakes ? 'lost' : 'playing'));
+                updateProgress(roomId, playerId!, progress, currentMistakes, isWon ? 'won' : (currentMistakes >= maxMistakes ? 'lost' : 'playing'));
             });
+        }
+
+        // Save to Leaderboard on Win (Any mode)
+        if (isWon) {
+            const { timer, difficulty } = get();
+            // We use a timeout to not block the UI or state update
+            setTimeout(() => {
+                import('./firebase/leaderboard').then(({ addScore }) => {
+                    // Use playerId if available, otherwise "Guest"
+                    const name = playerId || "Guest";
+                    addScore(name, timer, difficulty);
+                });
+            }, 0);
         }
 
         set({
@@ -238,5 +256,7 @@ export const useGameStore = create<GameState>((set, get) => ({
                 set({ lastHint: null });
             }
         }, 3000);
-    }
+    },
+
+    setHoveredCell: (cell) => set({ hoveredCell: cell })
 }));

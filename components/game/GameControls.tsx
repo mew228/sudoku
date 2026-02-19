@@ -1,21 +1,18 @@
 import { useGameStore } from "@/lib/store";
-import { Undo2, Eraser, Pencil, RotateCcw, Lightbulb } from 'lucide-react';
+import { Eraser, Pencil, RotateCcw, Lightbulb } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 export const GameControls = () => {
     const undo = useGameStore(state => state.undo);
-    const resetGame = useGameStore(state => state.resetGame);
+
     const toggleNotesMode = useGameStore(state => state.toggleNotesMode);
     const isNotesMode = useGameStore(state => state.isNotesMode);
     const setCellValue = useGameStore(state => state.setCellValue);
     const getHint = useGameStore(state => state.getHint);
     const hintsRemaining = useGameStore(state => state.hintsRemaining);
 
-    const handleEraserDragStart = (e: React.DragEvent) => {
-        e.dataTransfer.setData('text/plain', '0');
-        e.dataTransfer.effectAllowed = 'copy';
-    };
+
 
     return (
         <div className="flex justify-between w-full px-2">
@@ -28,8 +25,6 @@ export const GameControls = () => {
                 icon={<Eraser size={22} />}
                 label="Erase"
                 onClick={() => setCellValue(0)}
-                draggable
-                onDragStart={handleEraserDragStart}
             />
             <ControlBtn
                 icon={<Pencil size={22} />}
@@ -49,19 +44,27 @@ export const GameControls = () => {
     );
 };
 
-const ControlBtn = ({ icon, label, onClick, isActive, badge, draggable, onDragStart, disabled }: any) => (
+interface ControlBtnProps {
+    icon: React.ReactNode;
+    label: string;
+    onClick?: () => void;
+    isActive?: boolean;
+    badge?: string;
+    disabled?: boolean;
+}
+
+const ControlBtn = ({ icon, label, onClick, isActive, badge, disabled }: ControlBtnProps) => (
     <motion.button
         whileTap={disabled ? {} : { scale: 0.9 }}
         whileHover={disabled ? {} : { scale: 1.05 }}
         onClick={disabled ? undefined : onClick}
-        draggable={draggable}
-        onDragStart={onDragStart}
+        suppressHydrationWarning
+        draggable={false}
         className={cn(
             "flex flex-col items-center gap-2 group relative transition-all outline-none",
             disabled
                 ? "text-slate-300 cursor-not-allowed opacity-50"
-                : isActive ? "text-indigo-600" : "text-slate-400 hover:text-indigo-600",
-            draggable && "cursor-grab active:cursor-grabbing"
+                : isActive ? "text-indigo-600" : "text-slate-400 hover:text-indigo-600"
         )}
     >
         <div className={cn(

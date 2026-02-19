@@ -106,7 +106,7 @@ function generateSudoku(difficulty) {
             col = Math.floor(Math.random() * GRID_SIZE);
         }
         // Backup
-        const backup = initial[row][col];
+        // const backup = initial[row][col];
         initial[row][col] = BLANK;
         // Check if unique solution exists (simplified: just check if removing it made it unsolvable or ambiguous - for now assume standard removal is fine enough for this demo, or implement full unique check if needed. For speed, we'll stick to a probabilistic approach or just ensure at least 1 solution remains, which is guaranteed if we start from solved. Uniqueness is harder but let's trust the "attempts" heuristic for now.)
         // A true unique checker solves the board again and ensures only 1 solution. 
@@ -333,6 +333,7 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         selectedCell: null,
         hintsRemaining: 3,
         lastHint: null,
+        hoveredCell: null,
         mode: 'single',
         roomId: null,
         playerId: null,
@@ -519,7 +520,10 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     });
                 }
             }, 3000);
-        }
+        },
+        setHoveredCell: (cell)=>set({
+                hoveredCell: cell
+            })
     }));
 }),
 "[project]/components/game/Cell.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
@@ -542,7 +546,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$e
 ;
 ;
 const Cell = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["memo"])(({ r, c, val, initial })=>{
-    const [isDragOver, setIsDragOver] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     // Optimizing selectors to avoid re-renders on timer tick
     const isSelected = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2f$shallow$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useShallow"])((state)=>state.selectedCell?.r === r && state.selectedCell?.c === c));
     // Check for related cells (same row, col, or box)
@@ -562,6 +565,8 @@ const Cell = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$n
     const isError = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>!initial && val !== 0 && val !== state.solvedBoard[r][c]);
     // Hint glow — true when this cell was just revealed by a hint
     const isHinted = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.lastHint?.r === r && state.lastHint?.c === c);
+    // Hover state from drag and drop
+    const isHovered = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2f$shallow$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useShallow"])((state)=>state.hoveredCell?.r === r && state.hoveredCell?.c === c));
     // Notes logic - purely selector based
     const cellNotes = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2f$shallow$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useShallow"])((state)=>{
         if (val !== 0) return [];
@@ -572,47 +577,25 @@ const Cell = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$n
         return notes;
     }));
     const selectCell = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.selectCell);
-    // We need setCellValue here for drag and drop interactions
-    // Since we can't easily modify the store action signature without broader refactoring,
-    // we'll rely on selecting the cell first, then setting the value.
-    const setCellValue = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.setCellValue);
     const handleClick = ()=>selectCell(r, c);
-    const handleDragOver = (e)=>{
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "copy";
-        if (!initial) {
-            setIsDragOver(true);
-        }
-    };
-    const handleDragLeave = ()=>{
-        setIsDragOver(false);
-    };
-    const handleDrop = (e)=>{
-        e.preventDefault();
-        setIsDragOver(false);
-        if (initial) return; // Cannot modify initial cells
-        const numStr = e.dataTransfer.getData("text/plain");
-        const num = parseInt(numStr, 10);
-        if (!isNaN(num) && num >= 0 && num <= 9) {
-            // Select this cell first
-            __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"].getState().selectCell(r, c);
-            // Then set the value (synchronously updates based on selected cell)
-            __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"].getState().setCellValue(num);
-        }
-    };
+    // HTML5 DnD handlers removed in favor of Framer Motion gesture handling in Numpad.tsx
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         onClick: handleClick,
-        onDragOver: handleDragOver,
-        onDragLeave: handleDragLeave,
-        onDrop: handleDrop,
+        "data-cell-row": r,
+        "data-cell-col": c,
+        // onDragOver={handleDragOver} // Removed
+        // onDragLeave={handleDragLeave} // Removed
+        // onDrop={handleDrop} // Removed
         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-200", "text-2xl sm:text-3xl font-light select-none", // Base Border
         "border-[0.5px] border-slate-300", // Thick 3x3 Borders
         // Right border for columns 2 and 5 (0-indexed indices 2 and 5)
         (c === 2 || c === 5) && "!border-r-2 !border-r-slate-800", // Bottom border for rows 2 and 5
         (r === 2 || r === 5) && "!border-b-2 !border-b-slate-800", // Remove outer borders (handled by board container)
         c === 8 && "border-r-0", r === 8 && "border-b-0", // Backgrounds & Text Colors
-        isError ? isSelected ? "bg-red-600 text-white" : "bg-red-100 text-red-600" : isSelected ? "bg-indigo-600 text-white" : isDragOver ? "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-20" : isSameValue ? "bg-indigo-100 text-indigo-900" : isRelated ? "bg-slate-100" : "bg-white hover:bg-slate-50", // Hint Golden Glow (layered on top)
-        isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20", // Dynamic Borders (Override structural borders)
+        isError ? isSelected ? "bg-red-600 text-white" : "bg-red-100 text-red-600" : isSelected ? "bg-indigo-600 text-white" : isSameValue // isDragOver removed or replaced with compatible visual state if needed later
+         ? "bg-indigo-100 text-indigo-900" : isRelated ? "bg-slate-100" : "bg-white hover:bg-slate-50", // Hint Golden Glow (layered on top)
+        isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20", // Hover Highlight (Drag & Drop)
+        isHovered && !isSelected && !isError && "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-30", // Dynamic Borders (Override structural borders)
         isSelected && !isError && "!border-indigo-600 z-10", isSelected && isError && "!border-red-600 z-10", !isSelected && isError && "!border-red-200", // Construct Structural Borders (Thick 3x3)
         // We leave the base structural borders at the top of the class list (lower priority in cascade if we use !important elsewhere,
         // but here we rely on order or !important. The dynamic borders above use ! so they should win).
@@ -636,7 +619,7 @@ const Cell = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$n
             children: val
         }, val, false, {
             fileName: "[project]/components/game/Cell.tsx",
-            lineNumber: 142,
+            lineNumber: 120,
             columnNumber: 17
         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "grid grid-cols-3 w-full h-full p-0.5 pointer-events-none",
@@ -657,22 +640,22 @@ const Cell = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$n
                         children: n
                     }, void 0, false, {
                         fileName: "[project]/components/game/Cell.tsx",
-                        lineNumber: 157,
+                        lineNumber: 135,
                         columnNumber: 33
                     }, ("TURBOPACK compile-time value", void 0))
                 }, n, false, {
                     fileName: "[project]/components/game/Cell.tsx",
-                    lineNumber: 155,
+                    lineNumber: 133,
                     columnNumber: 25
                 }, ("TURBOPACK compile-time value", void 0)))
         }, void 0, false, {
             fileName: "[project]/components/game/Cell.tsx",
-            lineNumber: 153,
+            lineNumber: 131,
             columnNumber: 17
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/components/game/Cell.tsx",
-        lineNumber: 90,
+        lineNumber: 65,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 });
@@ -705,7 +688,10 @@ const Board = ()=>{
         if (board.length === 0) {
             startGame('Medium');
         }
-    }, []);
+    }, [
+        board.length,
+        startGame
+    ]);
     if (board.length === 0) return null;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
         initial: {
@@ -763,16 +749,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$mo
 ;
 const GameControls = ()=>{
     const undo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.undo);
-    const resetGame = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.resetGame);
     const toggleNotesMode = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.toggleNotesMode);
     const isNotesMode = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.isNotesMode);
     const setCellValue = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.setCellValue);
     const getHint = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.getHint);
     const hintsRemaining = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])((state)=>state.hintsRemaining);
-    const handleEraserDragStart = (e)=>{
-        e.dataTransfer.setData('text/plain', '0');
-        e.dataTransfer.effectAllowed = 'copy';
-    };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex justify-between w-full px-2",
         children: [
@@ -781,14 +762,14 @@ const GameControls = ()=>{
                     size: 22
                 }, void 0, false, {
                     fileName: "[project]/components/game/GameControls.tsx",
-                    lineNumber: 23,
+                    lineNumber: 20,
                     columnNumber: 23
                 }, void 0),
                 label: "Undo",
                 onClick: undo
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 22,
+                lineNumber: 19,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlBtn, {
@@ -796,16 +777,14 @@ const GameControls = ()=>{
                     size: 22
                 }, void 0, false, {
                     fileName: "[project]/components/game/GameControls.tsx",
-                    lineNumber: 28,
+                    lineNumber: 25,
                     columnNumber: 23
                 }, void 0),
                 label: "Erase",
-                onClick: ()=>setCellValue(0),
-                draggable: true,
-                onDragStart: handleEraserDragStart
+                onClick: ()=>setCellValue(0)
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 27,
+                lineNumber: 24,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlBtn, {
@@ -813,7 +792,7 @@ const GameControls = ()=>{
                     size: 22
                 }, void 0, false, {
                     fileName: "[project]/components/game/GameControls.tsx",
-                    lineNumber: 35,
+                    lineNumber: 30,
                     columnNumber: 23
                 }, void 0),
                 label: "Notes",
@@ -822,7 +801,7 @@ const GameControls = ()=>{
                 badge: isNotesMode ? "ON" : "OFF"
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 34,
+                lineNumber: 29,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlBtn, {
@@ -830,7 +809,7 @@ const GameControls = ()=>{
                     size: 22
                 }, void 0, false, {
                     fileName: "[project]/components/game/GameControls.tsx",
-                    lineNumber: 42,
+                    lineNumber: 37,
                     columnNumber: 23
                 }, void 0),
                 label: "Hint",
@@ -839,17 +818,17 @@ const GameControls = ()=>{
                 disabled: hintsRemaining <= 0
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 41,
+                lineNumber: 36,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/game/GameControls.tsx",
-        lineNumber: 21,
+        lineNumber: 18,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
-const ControlBtn = ({ icon, label, onClick, isActive, badge, draggable, onDragStart, disabled })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].button, {
+const ControlBtn = ({ icon, label, onClick, isActive, badge, disabled })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].button, {
         whileTap: disabled ? {} : {
             scale: 0.9
         },
@@ -857,16 +836,14 @@ const ControlBtn = ({ icon, label, onClick, isActive, badge, draggable, onDragSt
             scale: 1.05
         },
         onClick: disabled ? undefined : onClick,
-        draggable: draggable,
-        onDragStart: onDragStart,
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("flex flex-col items-center gap-2 group relative transition-all outline-none", disabled ? "text-slate-300 cursor-not-allowed opacity-50" : isActive ? "text-indigo-600" : "text-slate-400 hover:text-indigo-600", draggable && "cursor-grab active:cursor-grabbing"),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("flex flex-col items-center gap-2 group relative transition-all outline-none", disabled ? "text-slate-300 cursor-not-allowed opacity-50" : isActive ? "text-indigo-600" : "text-slate-400 hover:text-indigo-600"),
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("w-14 h-14 rounded-2xl flex items-center justify-center transition-all border-2 shadow-sm", disabled ? "bg-slate-50 border-slate-100 text-slate-300" : isActive ? "bg-indigo-600 text-white border-indigo-600 shadow-indigo-200 shadow-lg ring-2 ring-indigo-100 ring-offset-2" : "bg-white border-slate-100 text-slate-600 group-hover:border-indigo-100 group-hover:bg-indigo-50 group-hover:text-indigo-600"),
                 children: icon
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 67,
+                lineNumber: 68,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -874,7 +851,7 @@ const ControlBtn = ({ icon, label, onClick, isActive, badge, draggable, onDragSt
                 children: label
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 77,
+                lineNumber: 78,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             badge && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -888,13 +865,13 @@ const ControlBtn = ({ icon, label, onClick, isActive, badge, draggable, onDragSt
                 children: badge
             }, void 0, false, {
                 fileName: "[project]/components/game/GameControls.tsx",
-                lineNumber: 79,
+                lineNumber: 80,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/game/GameControls.tsx",
-        lineNumber: 53,
+        lineNumber: 57,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 }),
@@ -924,19 +901,68 @@ const Numpad = ()=>{
         8,
         9
     ];
-    const handleDragStart = (e, num)=>{
-        e.dataTransfer.setData('text/plain', num.toString());
-        e.dataTransfer.effectAllowed = 'copy';
-    // Optional: Create a custom drag image if needed, but default is usually fine
-    // const img = new Image();
-    // img.src = ...
-    // e.dataTransfer.setDragImage(img, 0, 0);
+    const handleDragStart = ()=>{
+    // Prevent default touch actions if needed, though Framer Motion handles most
+    };
+    // Helper to find the cell under the cursor/finger
+    const getCellFromPoint = (x, y)=>{
+        // Use elementsFromPoint to find all elements, then find the cell
+        // This is more robust than elementFromPoint if the dragged item blocks the cell
+        const elements = document.elementsFromPoint(x, y);
+        for (const element of elements){
+            const cell = element.closest('[data-cell-row]');
+            if (cell) {
+                const r = parseInt(cell.getAttribute('data-cell-row') || '-1');
+                const c = parseInt(cell.getAttribute('data-cell-col') || '-1');
+                if (r !== -1 && c !== -1) return {
+                    r,
+                    c
+                };
+            }
+        }
+        return null;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleDrag = (_, info)=>{
+        const point = info.point;
+        const cell = getCellFromPoint(point.x, point.y);
+        // Update hover state in store to show visual feedback
+        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"].getState().setHoveredCell(cell);
+    };
+    const handleDragEnd = (event, info, num)=>{
+        const point = info.point;
+        const cellCoords = getCellFromPoint(point.x, point.y);
+        const state = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"].getState();
+        // Clear hover state
+        state.setHoveredCell(null);
+        if (cellCoords) {
+            const { r, c } = cellCoords;
+            // Check if cell is editable (not initial)
+            if (!state.initialBoard[r][c]) {
+                state.selectCell(r, c);
+                state.setCellValue(num);
+            }
+        }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "grid grid-cols-3 gap-2 w-full",
         children: numbers.map((num)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
-                draggable: true,
-                onDragStart: (e)=>handleDragStart(e, num),
+                drag: true,
+                dragSnapToOrigin: true,
+                dragElastic: 0.1,
+                dragMomentum: false,
+                whileDrag: {
+                    scale: 1.2,
+                    zIndex: 50,
+                    cursor: "grabbing"
+                },
+                onDragStart: handleDragStart,
+                onDrag: handleDrag,
+                onDragEnd: (e, info)=>handleDragEnd(e, info, num),
+                onPointerDown: ()=>{
+                // Prevent default touch behaviors that might interfere
+                // but DON'T stop propagation or you kill the drag
+                },
                 whileHover: {
                     scale: 1.05
                 },
@@ -944,19 +970,19 @@ const Numpad = ()=>{
                     scale: 0.90
                 },
                 onClick: ()=>setCellValue(num),
-                className: "aspect-[4/3] flex items-center justify-center text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-xl transition-all duration-75 cursor-grab active:cursor-grabbing",
+                className: "aspect-[4/3] flex items-center justify-center text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none",
                 style: {
                     touchAction: 'none'
                 },
                 children: num
             }, num, false, {
                 fileName: "[project]/components/game/Numpad.tsx",
-                lineNumber: 21,
+                lineNumber: 58,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0)))
     }, void 0, false, {
         fileName: "[project]/components/game/Numpad.tsx",
-        lineNumber: 19,
+        lineNumber: 56,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -1208,6 +1234,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@firebase/database/dist/node-esm/index.node.esm.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/logic/sudoku.ts [app-ssr] (ecmascript)");
 ;
+const getDb = ()=>{
+    if (!__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"]) throw new Error("Firebase database is not initialized");
+    return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"];
+};
 ;
 ;
 /**
@@ -1226,12 +1256,12 @@ const createRoom = async (playerName, difficulty)=>{
     let attempts = 0;
     while(attempts < 5){
         code = generateShortCode();
-        const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${code}`));
+        const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${code}`));
         if (!snapshot.exists()) break;
         attempts++;
     }
     const { initial, solved } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["generateSudoku"])(difficulty);
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["set"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${code}`), {
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["set"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${code}`), {
         id: code,
         status: 'waiting',
         difficulty,
@@ -1251,7 +1281,7 @@ const createRoom = async (playerName, difficulty)=>{
     return code;
 };
 const joinRoom = async (roomId, playerName)=>{
-    const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}`);
+    const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
     const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(roomRef);
     if (!snapshot.exists()) {
         throw new Error("Room not found. Check the code and try again.");
@@ -1265,7 +1295,7 @@ const joinRoom = async (roomId, playerName)=>{
         throw new Error("That name is already taken in this room.");
     }
     // Add player
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}/players/${playerName}`), {
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${playerName}`), {
         name: playerName,
         progress: 0,
         mistakes: 0,
@@ -1273,26 +1303,26 @@ const joinRoom = async (roomId, playerName)=>{
     });
     // Auto-start when 2nd player joins
     if (existingPlayers.length >= 1) {
-        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}`), {
+        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`), {
             status: 'playing'
         });
     }
 };
 const subscribeToRoom = (roomId, callback)=>{
-    const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}`);
+    const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["onValue"])(roomRef, (snapshot)=>{
         const data = snapshot.val();
         if (data) callback(data);
     });
 };
 const updateProgress = async (roomId, playerName, progress, mistakes, status)=>{
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}/players/${playerName}`), {
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${playerName}`), {
         progress,
         mistakes,
         status
     });
     if (status === 'won') {
-        const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], `rooms/${roomId}`);
+        const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
         const snap = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(roomRef);
         if (snap.val() && !snap.val().winner) {
             await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])(roomRef, {
@@ -1371,8 +1401,9 @@ const Lobby = ()=>{
                     }
                 }
             });
-        } catch (e) {
-            setError(e.message || "Failed to create room");
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : "Failed to create room";
+            setError(msg);
         } finally{
             setLoading(false);
         }
@@ -1409,8 +1440,9 @@ const Lobby = ()=>{
                     }
                 }
             });
-        } catch (e) {
-            setError(e.message || "Failed to join room");
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : "Failed to join room";
+            setError(msg);
         } finally{
             setLoading(false);
         }
@@ -1443,12 +1475,12 @@ const Lobby = ()=>{
                             className: "text-white"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 105,
+                            lineNumber: 107,
                             columnNumber: 25
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 104,
+                        lineNumber: 106,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1456,7 +1488,7 @@ const Lobby = ()=>{
                         children: "Room Created!"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 107,
+                        lineNumber: 109,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1464,7 +1496,7 @@ const Lobby = ()=>{
                         children: "Share this code with your opponent"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 108,
+                        lineNumber: 110,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1475,7 +1507,7 @@ const Lobby = ()=>{
                                 children: "Room Code"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 112,
+                                lineNumber: 114,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1486,7 +1518,7 @@ const Lobby = ()=>{
                                         children: createdRoomId
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Lobby.tsx",
-                                        lineNumber: 114,
+                                        lineNumber: 116,
                                         columnNumber: 29
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1497,30 +1529,30 @@ const Lobby = ()=>{
                                             className: "text-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Lobby.tsx",
-                                            lineNumber: 119,
+                                            lineNumber: 121,
                                             columnNumber: 43
                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                             size: 18
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Lobby.tsx",
-                                            lineNumber: 119,
+                                            lineNumber: 121,
                                             columnNumber: 94
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Lobby.tsx",
-                                        lineNumber: 115,
+                                        lineNumber: 117,
                                         columnNumber: 29
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 113,
+                                lineNumber: 115,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 111,
+                        lineNumber: 113,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1531,7 +1563,7 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 126,
+                                lineNumber: 128,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1539,13 +1571,13 @@ const Lobby = ()=>{
                                 children: "Waiting for opponent..."
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 127,
+                                lineNumber: 129,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 125,
+                        lineNumber: 127,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1556,31 +1588,31 @@ const Lobby = ()=>{
                                 size: 14
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 135,
+                                lineNumber: 137,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 children: "Back"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 136,
+                                lineNumber: 138,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 131,
+                        lineNumber: 133,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/layout/Lobby.tsx",
-                lineNumber: 102,
+                lineNumber: 104,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/components/layout/Lobby.tsx",
-            lineNumber: 97,
+            lineNumber: 99,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -1613,12 +1645,12 @@ const Lobby = ()=>{
                                 className: "text-white"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 155,
+                                lineNumber: 157,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 154,
+                            lineNumber: 156,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1626,7 +1658,7 @@ const Lobby = ()=>{
                             children: "PvP Arena"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 157,
+                            lineNumber: 159,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1634,13 +1666,13 @@ const Lobby = ()=>{
                             children: "Challenge a friend in real-time"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 158,
+                            lineNumber: 160,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 153,
+                    lineNumber: 155,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1651,7 +1683,7 @@ const Lobby = ()=>{
                             children: "Your Name"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 163,
+                            lineNumber: 165,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1666,13 +1698,13 @@ const Lobby = ()=>{
                             className: "w-full px-4 py-3.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-800 placeholder-slate-300 font-medium focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 164,
+                            lineNumber: 166,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 162,
+                    lineNumber: 164,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].button, {
@@ -1690,19 +1722,19 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 183,
+                                lineNumber: 185,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Creating..."
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 182,
+                        lineNumber: 184,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0)) : 'Create Room'
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 175,
+                    lineNumber: 177,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1712,7 +1744,7 @@ const Lobby = ()=>{
                             className: "h-[1px] bg-slate-100 flex-1"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 191,
+                            lineNumber: 193,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1720,20 +1752,20 @@ const Lobby = ()=>{
                             children: "or join"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 192,
+                            lineNumber: 194,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "h-[1px] bg-slate-100 flex-1"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 193,
+                            lineNumber: 195,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 190,
+                    lineNumber: 192,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1751,7 +1783,7 @@ const Lobby = ()=>{
                             className: "flex-1 px-4 py-3.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-800 placeholder-slate-300 font-mono font-bold text-center tracking-[0.2em] uppercase focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 198,
+                            lineNumber: 200,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].button, {
@@ -1766,18 +1798,18 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 212,
+                                lineNumber: 214,
                                 columnNumber: 36
                             }, ("TURBOPACK compile-time value", void 0)) : 'Join'
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 206,
+                            lineNumber: 208,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 197,
+                    lineNumber: 199,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -1797,23 +1829,23 @@ const Lobby = ()=>{
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 219,
+                        lineNumber: 221,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 217,
+                    lineNumber: 219,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/components/layout/Lobby.tsx",
-            lineNumber: 151,
+            lineNumber: 153,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/components/layout/Lobby.tsx",
-        lineNumber: 145,
+        lineNumber: 147,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -1862,7 +1894,12 @@ function Home() {
         if (status === 'idle' && mode === 'single') {
             startGame(difficulty);
         }
-    }, []);
+    }, [
+        status,
+        mode,
+        startGame,
+        difficulty
+    ]);
     // Centralized Timer Logic
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         let interval;
