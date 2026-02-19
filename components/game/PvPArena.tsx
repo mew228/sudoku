@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { subscribeToRoom } from '@/lib/firebase/rooms';
+import { subscribeToRoom, subscribeToPlayers } from '@/lib/firebase/rooms';
 import { Board } from './Board';
 import { GameControls } from './GameControls';
 import { Numpad } from './Numpad';
@@ -25,6 +25,8 @@ export const PvPArena = () => {
         setMultiplayerState
     } = useGameStore();
 
+    const [isConnected, setIsConnected] = useState(false);
+
     // Effect to handle game over states
     useEffect(() => {
         if (opponentStatus === 'won' && status !== 'lost' && status !== 'won') {
@@ -34,27 +36,25 @@ export const PvPArena = () => {
     }, [opponentStatus, status]);
 
     // Effect to subscribe to room updates (for opponent progress/status)
-    // Effect to subscribe to room updates (for opponent progress/status)
     useEffect(() => {
         if (!roomId || !playerId) return;
 
-        // Use optimized player subscription to avoid re-fetching the board on every move
-        import('@/lib/firebase/rooms').then(({ subscribeToPlayers }) => {
-            const unsubscribe = subscribeToPlayers(roomId, (players) => {
-                // Find opponent
-                const opponent = Object.values(players || {}).find((p: any) => p.name !== playerId) as any;
-                if (opponent) {
-                    setMultiplayerState({
-                        opponentName: opponent.name,
-                        opponentProgress: opponent.progress,
-                        opponentStatus: opponent.status
-                    });
-                }
-            });
-
-            // Cleanup subscription on unmount
-            return () => unsubscribe();
+        // Subscribe to players
+        const unsubscribe = subscribeToPlayers(roomId, (players) => {
+            setIsConnected(true);
+            // Find opponent
+            const opponent = Object.values(players || {}).find((p: any) => p.name !== playerId) as any;
+            if (opponent) {
+                setMultiplayerState({
+                    opponentName: opponent.name,
+                    opponentProgress: opponent.progress,
+                    opponentStatus: opponent.status
+                });
+            }
         });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
     }, [roomId, playerId, setMultiplayerState]);
 
     return (
@@ -69,6 +69,7 @@ export const PvPArena = () => {
                         <Users size={18} />
                         <span className="font-bold text-sm tracking-wide">PvP MATCH</span>
                         <span className="text-xs opacity-60 ml-1">({difficulty})</span>
+                        <div className={`w-2 h-2 rounded-full ml-2 ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={isConnected ? "Live Sync Active" : "Connecting..."} />
                     </div>
                     <div className="text-3xl font-bold text-slate-800 font-mono bg-white px-4 py-1 rounded-lg border border-slate-100 shadow-sm">
                         <Timer />
