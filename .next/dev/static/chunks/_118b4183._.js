@@ -368,6 +368,8 @@ __turbopack_context__.s([
     ()=>createRoom,
     "joinRoom",
     ()=>joinRoom,
+    "listenToConnection",
+    ()=>listenToConnection,
     "subscribeToBoard",
     ()=>subscribeToBoard,
     "subscribeToPlayers",
@@ -435,13 +437,13 @@ const createRoom = async (playerName, difficulty)=>{
         difficulty,
         initialBoard: initial,
         solvedBoard: solved,
+        board: currentBoard,
         players: {
             [user.uid]: {
                 name: playerName || user.displayName || 'Player 1',
                 progress: 0,
                 mistakes: 0,
-                status: 'playing',
-                board: currentBoard
+                status: 'playing'
             }
         },
         winner: null,
@@ -467,10 +469,7 @@ const joinRoom = async (roomId, playerName)=>{
         name: playerName || user.displayName || 'Player 2',
         progress: room.players[user.uid]?.progress || 0,
         mistakes: room.players[user.uid]?.mistakes || 0,
-        status: 'playing',
-        board: room.players[user.uid]?.board || room.initialBoard.map((row)=>[
-                ...row
-            ])
+        status: 'playing'
     });
     // Auto-start when 2nd player joins
     const existingPlayers = Object.keys(room.players || {});
@@ -515,13 +514,20 @@ const subscribeToPlayers = (roomId, callback)=>{
         if (data) callback(data);
     });
 };
+const listenToConnection = (callback)=>{
+    const connectedRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(getDb(), ".info/connected");
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["onValue"])(connectedRef, (snap)=>{
+        callback(snap.val() === true);
+    });
+};
 const updateBoardCell = async (roomId, r, c, value)=>{
     const user = getAuth().currentUser;
     if (!user) return;
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["set"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${user.uid}/board/${r}/${c}`), value);
+    // Write to SHARED board at room root
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["set"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/board/${r}/${c}`), value);
 };
-const subscribeToBoard = (roomId, uid, callback)=>{
-    const boardRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${uid}/board`);
+const subscribeToBoard = (roomId, callback)=>{
+    const boardRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/board`);
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["onValue"])(boardRef, (snapshot)=>{
         const data = snapshot.val();
         if (data) callback(data);
@@ -660,9 +666,12 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         roomId: null,
         playerId: null,
         uid: null,
+        playerName: null,
         opponentProgress: 0,
         opponentName: null,
         opponentStatus: null,
+        isFirebaseConnected: true,
+        lastSyncError: null,
         setRemoteBoard: (board)=>set({
                 board
             }),
@@ -793,9 +802,19 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     }
                 }
                 if (mode === 'pvp' && roomId) {
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>console.error("Board Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>{
+                        console.error("Board Sync Failed:", e);
+                        set({
+                            lastSyncError: `Board Sync: ${e.message}`
+                        });
+                    });
                     const progress = Math.floor(filled / (__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"] * __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"]) * 100);
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, mistakes, isWon ? 'won' : 'playing').catch((e)=>console.error("Progress Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, mistakes, isWon ? 'won' : 'playing').catch((e)=>{
+                        console.error("Progress Sync Failed:", e);
+                        set({
+                            lastSyncError: `Progress Sync: ${e.message}`
+                        });
+                    });
                 }
             } else {
                 const newMistakes = mistakes + 1;
@@ -817,7 +836,12 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     }
                 }
                 if (mode === 'pvp' && roomId) {
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>console.error("Board Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>{
+                        console.error("Mistake Board Sync Failed:", e);
+                        set({
+                            lastSyncError: `Board Sync: ${e.message}`
+                        });
+                    });
                     let filled = 0;
                     for(let i = 0; i < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"]; i++){
                         for(let j = 0; j < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"]; j++){
@@ -825,7 +849,12 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         }
                     }
                     const progress = Math.floor(filled / (__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"] * __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GRID_SIZE"]) * 100);
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, newMistakes, isLost ? 'lost' : 'playing').catch((e)=>console.error("Mistake Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, newMistakes, isLost ? 'lost' : 'playing').catch((e)=>{
+                        console.error("Mistake Progress Sync Failed:", e);
+                        set({
+                            lastSyncError: `Mistake Sync: ${e.message}`
+                        });
+                    });
                 }
             }
         },
@@ -1506,10 +1535,10 @@ var _s = __turbopack_context__.k.signature();
 ;
 const Numpad = ()=>{
     _s();
-    var _s1 = __turbopack_context__.k.signature();
     const setCellValue = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"])({
         "Numpad.useGameStore[setCellValue]": (state)=>state.setCellValue
     }["Numpad.useGameStore[setCellValue]"]);
+    const { playSound } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hooks$2f$useSound$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSound"])();
     const numbers = [
         1,
         2,
@@ -1522,13 +1551,16 @@ const Numpad = ()=>{
         9
     ];
     const handleDragStart = ()=>{
-    // Prevent default touch actions if needed, though Framer Motion handles most
+    // Prevent default touch actions if needed
     };
     // Helper to find the cell under the cursor/finger
     const getCellFromPoint = (x, y)=>{
-        // Use elementsFromPoint to find all elements, then find the cell
-        // This is more robust than elementFromPoint if the dragged item blocks the cell
-        const elements = document.elementsFromPoint(x, y);
+        // IMPORTANT: document.elementsFromPoint expects VIEWPORT coordinates (clientX/Y)
+        // info.point from Framer Motion is often absolute (pageX/Y)
+        // We ensure we're using viewport coordinates by subtracting scroll
+        const clientX = x - window.scrollX;
+        const clientY = y - window.scrollY;
+        const elements = document.elementsFromPoint(clientX, clientY);
         for (const element of elements){
             const cell = element.closest('[data-cell-row]');
             if (cell) {
@@ -1544,17 +1576,14 @@ const Numpad = ()=>{
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleDrag = (_, info)=>{
-        // Simple throttle: only update if point moved significantly or restrict frequency
-        // For now, rely on Framer Motion's internal checks but ensure we don't spam store
         const point = info.point;
         const cell = getCellFromPoint(point.x, point.y);
-        // Optimization: Only update if cell changed
         const currentHover = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().hoveredCell;
         if (cell?.r !== currentHover?.r || cell?.c !== currentHover?.c) {
             __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().setHoveredCell(cell);
         }
     };
-    const handleDragEnd = (event, info, num)=>{
+    const handleDragEnd = (_event, info, num)=>{
         const point = info.point;
         const cellCoords = getCellFromPoint(point.x, point.y);
         const state = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState();
@@ -1562,7 +1591,6 @@ const Numpad = ()=>{
         state.setHoveredCell(null);
         if (cellCoords) {
             const { r, c } = cellCoords;
-            // Check if cell is editable (not initial)
             if (!state.initialBoard[r][c]) {
                 state.selectCell(r, c);
                 state.setCellValue(num);
@@ -1578,15 +1606,16 @@ const Numpad = ()=>{
                 dragMomentum: false,
                 whileDrag: {
                     scale: 1.2,
-                    zIndex: 50,
-                    cursor: "grabbing"
+                    zIndex: 100,
+                    cursor: "grabbing",
+                    opacity: 0.8 // See through the number to the cell
                 },
                 onDragStart: handleDragStart,
                 onDrag: handleDrag,
                 onDragEnd: (e, info)=>handleDragEnd(e, info, num),
                 onPointerDown: (e)=>{
-                    // Prevent default touch behaviors that might interfere
-                    e.preventDefault();
+                // Prevent default touch behaviors that might interfere
+                // e.preventDefault(); // Commented out to see if it allows better selection
                 },
                 whileHover: {
                     scale: 1.05
@@ -1594,15 +1623,10 @@ const Numpad = ()=>{
                 whileTap: {
                     scale: 0.90
                 },
-                onClick: _s1(()=>{
-                    _s1();
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hooks$2f$useSound$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSound"])().playSound('click');
+                onClick: ()=>{
+                    playSound('click');
                     setCellValue(num);
-                }, "OORg2omllOcUK1nQuh16v7xuLgY=", false, function() {
-                    return [
-                        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hooks$2f$useSound$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSound"]
-                    ];
-                }),
+                },
                 className: "aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none",
                 style: {
                     touchAction: 'none'
@@ -1610,18 +1634,19 @@ const Numpad = ()=>{
                 children: num
             }, num, false, {
                 fileName: "[project]/components/game/Numpad.tsx",
-                lineNumber: 64,
+                lineNumber: 65,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0)))
     }, void 0, false, {
         fileName: "[project]/components/game/Numpad.tsx",
-        lineNumber: 62,
+        lineNumber: 63,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s(Numpad, "4eLrk4zTHWDXphraaVFWu+FOwhw=", false, function() {
+_s(Numpad, "uj7oQHWtvxEq+6SBR1oHe894QPU=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$hooks$2f$useSound$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSound"]
     ];
 });
 _c = Numpad;
@@ -1932,12 +1957,13 @@ const Lobby = ()=>{
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
-                        board: room.initialBoard,
+                        board: room.board || room.initialBoard,
                         initialBoard: room.initialBoard,
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty
                     });
-                    const opponent = Object.values(room.players || {}).find((p)=>p.name !== name.trim());
+                    const currentUid = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().uid;
+                    const opponent = Object.entries(room.players || {}).find(([id])=>id !== currentUid)?.[1];
                     if (opponent) {
                         setMultiplayerState({
                             opponentName: opponent.name
@@ -1978,12 +2004,13 @@ const Lobby = ()=>{
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
-                        board: room.initialBoard,
+                        board: room.board || room.initialBoard,
                         initialBoard: room.initialBoard,
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty
                     });
-                    const opponent = Object.values(room.players || {}).find((p)=>p.name !== name.trim());
+                    const currentUid = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().uid;
+                    const opponent = Object.entries(room.players || {}).find(([id])=>id !== currentUid)?.[1];
                     if (opponent) {
                         setMultiplayerState({
                             opponentName: opponent.name
@@ -2044,12 +2071,12 @@ const Lobby = ()=>{
                             className: "text-white"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 158,
+                            lineNumber: 160,
                             columnNumber: 25
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 157,
+                        lineNumber: 159,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -2057,7 +2084,7 @@ const Lobby = ()=>{
                         children: "Room Created!"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 160,
+                        lineNumber: 162,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2065,7 +2092,7 @@ const Lobby = ()=>{
                         children: "Share this code with your opponent"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 161,
+                        lineNumber: 163,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2076,7 +2103,7 @@ const Lobby = ()=>{
                                 children: "Room Code"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 165,
+                                lineNumber: 167,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2087,7 +2114,7 @@ const Lobby = ()=>{
                                         children: createdRoomId
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Lobby.tsx",
-                                        lineNumber: 167,
+                                        lineNumber: 169,
                                         columnNumber: 29
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2098,30 +2125,30 @@ const Lobby = ()=>{
                                             className: "text-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Lobby.tsx",
-                                            lineNumber: 172,
+                                            lineNumber: 174,
                                             columnNumber: 43
                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                             size: 18
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Lobby.tsx",
-                                            lineNumber: 172,
+                                            lineNumber: 174,
                                             columnNumber: 94
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Lobby.tsx",
-                                        lineNumber: 168,
+                                        lineNumber: 170,
                                         columnNumber: 29
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 166,
+                                lineNumber: 168,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 164,
+                        lineNumber: 166,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2132,7 +2159,7 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 179,
+                                lineNumber: 181,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2140,13 +2167,13 @@ const Lobby = ()=>{
                                 children: "Waiting for opponent..."
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 180,
+                                lineNumber: 182,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 178,
+                        lineNumber: 180,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2157,31 +2184,31 @@ const Lobby = ()=>{
                                 size: 14
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 188,
+                                lineNumber: 190,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 children: "Back"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 189,
+                                lineNumber: 191,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 184,
+                        lineNumber: 186,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/layout/Lobby.tsx",
-                lineNumber: 155,
+                lineNumber: 157,
                 columnNumber: 17
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/components/layout/Lobby.tsx",
-            lineNumber: 150,
+            lineNumber: 152,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -2214,12 +2241,12 @@ const Lobby = ()=>{
                                 className: "text-white"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 208,
+                                lineNumber: 210,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 207,
+                            lineNumber: 209,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -2227,7 +2254,7 @@ const Lobby = ()=>{
                             children: "PvP Arena"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 210,
+                            lineNumber: 212,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2235,13 +2262,13 @@ const Lobby = ()=>{
                             children: "Challenge a friend in real-time"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 211,
+                            lineNumber: 213,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 206,
+                    lineNumber: 208,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2252,7 +2279,7 @@ const Lobby = ()=>{
                             children: "Your Name"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 216,
+                            lineNumber: 218,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2267,13 +2294,13 @@ const Lobby = ()=>{
                             className: "w-full px-4 py-3.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-800 placeholder-slate-300 font-medium focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 217,
+                            lineNumber: 219,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 215,
+                    lineNumber: 217,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].button, {
@@ -2291,19 +2318,19 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 236,
+                                lineNumber: 238,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Creating..."
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 235,
+                        lineNumber: 237,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0)) : 'Create Room'
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 228,
+                    lineNumber: 230,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2313,7 +2340,7 @@ const Lobby = ()=>{
                             className: "h-[1px] bg-slate-100 flex-1"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 244,
+                            lineNumber: 246,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2321,20 +2348,20 @@ const Lobby = ()=>{
                             children: "or join"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 245,
+                            lineNumber: 247,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "h-[1px] bg-slate-100 flex-1"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 246,
+                            lineNumber: 248,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 243,
+                    lineNumber: 245,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2352,7 +2379,7 @@ const Lobby = ()=>{
                             className: "flex-1 px-4 py-3.5 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-800 placeholder-slate-300 font-mono font-bold text-center tracking-[0.2em] uppercase focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 251,
+                            lineNumber: 253,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].button, {
@@ -2367,18 +2394,59 @@ const Lobby = ()=>{
                                 className: "animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Lobby.tsx",
-                                lineNumber: 265,
+                                lineNumber: 267,
                                 columnNumber: 36
                             }, ("TURBOPACK compile-time value", void 0)) : 'Join'
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Lobby.tsx",
-                            lineNumber: 259,
+                            lineNumber: 261,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 250,
+                    lineNumber: 252,
+                    columnNumber: 17
+                }, ("TURBOPACK compile-time value", void 0)),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "mt-8",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300 text-center mb-3",
+                            children: "No one online?"
+                        }, void 0, false, {
+                            fileName: "[project]/components/layout/Lobby.tsx",
+                            lineNumber: 273,
+                            columnNumber: 21
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].button, {
+                            whileTap: {
+                                scale: 0.97
+                            },
+                            onClick: ()=>{
+                                const { startGame, difficulty } = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState();
+                                startGame(difficulty, 'bot');
+                            },
+                            className: "w-full py-3 bg-white text-indigo-600 border-2 border-indigo-100 rounded-xl font-bold text-sm hover:bg-indigo-50 hover:border-indigo-200 transition-all flex items-center justify-center gap-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$swords$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Swords$3e$__["Swords"], {
+                                    size: 16
+                                }, void 0, false, {
+                                    fileName: "[project]/components/layout/Lobby.tsx",
+                                    lineNumber: 282,
+                                    columnNumber: 25
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                "Practice vs AI Bot"
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/components/layout/Lobby.tsx",
+                            lineNumber: 274,
+                            columnNumber: 21
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/components/layout/Lobby.tsx",
+                    lineNumber: 272,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2398,23 +2466,23 @@ const Lobby = ()=>{
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Lobby.tsx",
-                        lineNumber: 272,
+                        lineNumber: 290,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Lobby.tsx",
-                    lineNumber: 270,
+                    lineNumber: 288,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/components/layout/Lobby.tsx",
-            lineNumber: 204,
+            lineNumber: 206,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/components/layout/Lobby.tsx",
-        lineNumber: 198,
+        lineNumber: 200,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2448,6 +2516,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Timer$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-client] (ecmascript) <export default as Users>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trophy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trophy$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/trophy.js [app-client] (ecmascript) <export default as Trophy>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-x.js [app-client] (ecmascript) <export default as XCircle>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-alert.js [app-client] (ecmascript) <export default as AlertCircle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs [app-client] (ecmascript)");
 ;
@@ -2464,13 +2533,11 @@ var _s = __turbopack_context__.k.signature();
 ;
 const PvPArena = ()=>{
     _s();
-    const { difficulty, status, opponentName, opponentProgress, mistakes, startGame, mode, opponentStatus, roomId, playerId, setMultiplayerState } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"])();
-    const [isConnected, setIsConnected] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const { difficulty, status, opponentName, opponentProgress, mistakes, mode, opponentStatus, roomId, playerId, uid, isFirebaseConnected, lastSyncError, setMultiplayerState } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"])();
     // Effect to handle game over states
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "PvPArena.useEffect": ()=>{
             if (opponentStatus === 'won' && status !== 'lost' && status !== 'won') {
-                // Opponent won, so we lost
                 __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].setState({
                     status: 'lost'
                 });
@@ -2480,17 +2547,18 @@ const PvPArena = ()=>{
         opponentStatus,
         status
     ]);
-    // Effect to subscribe to room updates (for opponent progress/status)
+    // Effect to subscribe to room updates
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "PvPArena.useEffect": ()=>{
             if (!roomId || !playerId) return;
-            // Subscribe to players (for online status/mistakes)
             const unsubPlayers = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["subscribeToPlayers"])(roomId, {
                 "PvPArena.useEffect.unsubPlayers": (players)=>{
-                    setIsConnected(true);
-                    const opponent = Object.values(players || {}).find({
-                        "PvPArena.useEffect.unsubPlayers.opponent": (p)=>p.name !== playerId
-                    }["PvPArena.useEffect.unsubPlayers.opponent"]);
+                    const currentUid = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().uid;
+                    // Find opponent by excluding current user's UID
+                    const opponentEntry = Object.entries(players || {}).find({
+                        "PvPArena.useEffect.unsubPlayers.opponentEntry": ([id])=>id !== currentUid
+                    }["PvPArena.useEffect.unsubPlayers.opponentEntry"]);
+                    const opponent = opponentEntry ? opponentEntry[1] : null;
                     if (opponent) {
                         setMultiplayerState({
                             opponentName: opponent.name,
@@ -2500,12 +2568,11 @@ const PvPArena = ()=>{
                     }
                 }
             }["PvPArena.useEffect.unsubPlayers"]);
-            // Subscribe to PERSONAL BOARD (for persistence/racing)
+            // Subscribe to SHARED BOARD
             __turbopack_context__.A("[project]/lib/firebase/rooms.ts [app-client] (ecmascript, async loader)").then({
                 "PvPArena.useEffect": ({ subscribeToBoard })=>{
-                    const currentUid = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().uid;
-                    if (roomId && currentUid) {
-                        subscribeToBoard(roomId, currentUid, {
+                    if (roomId) {
+                        subscribeToBoard(roomId, {
                             "PvPArena.useEffect": (remoteBoard)=>{
                                 if (remoteBoard) {
                                     __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().setRemoteBoard(remoteBoard);
@@ -2523,7 +2590,9 @@ const PvPArena = ()=>{
         }
     }["PvPArena.useEffect"], [
         roomId,
+        mode,
         playerId,
+        uid,
         setMultiplayerState
     ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2549,7 +2618,8 @@ const PvPArena = ()=>{
                                                 columnNumber: 29
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: `absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`
+                                                className: `absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm transition-colors ${isFirebaseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-pulse'}`,
+                                                title: isFirebaseConnected ? "Connected" : "Disconnected"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/game/PvPArena.tsx",
                                                 lineNumber: 85,
@@ -2633,18 +2703,18 @@ const PvPArena = ()=>{
                                 className: "text-xl sm:text-2xl font-bold text-slate-800 font-mono bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm shrink-0",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Timer$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Timer"], {}, void 0, false, {
                                     fileName: "[project]/components/game/PvPArena.tsx",
-                                    lineNumber: 107,
+                                    lineNumber: 106,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 106,
+                                lineNumber: 105,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 79,
+                        lineNumber: 80,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2653,23 +2723,23 @@ const PvPArena = ()=>{
                             className: "h-full w-full max-w-full aspect-square flex items-center justify-center",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Board$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Board"], {}, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 114,
+                                lineNumber: 112,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/components/game/PvPArena.tsx",
-                            lineNumber: 113,
+                            lineNumber: 111,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 112,
+                        lineNumber: 110,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/game/PvPArena.tsx",
-                lineNumber: 76,
+                lineNumber: 77,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2686,7 +2756,7 @@ const PvPArena = ()=>{
                                         children: "Mistakes"
                                     }, void 0, false, {
                                         fileName: "[project]/components/game/PvPArena.tsx",
-                                        lineNumber: 125,
+                                        lineNumber: 123,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2697,7 +2767,7 @@ const PvPArena = ()=>{
                                                 children: mistakes
                                             }, void 0, false, {
                                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                                lineNumber: 127,
+                                                lineNumber: 125,
                                                 columnNumber: 29
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2705,19 +2775,19 @@ const PvPArena = ()=>{
                                                 children: "/3"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                                lineNumber: 130,
+                                                lineNumber: 128,
                                                 columnNumber: 29
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/game/PvPArena.tsx",
-                                        lineNumber: 126,
+                                        lineNumber: 124,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 124,
+                                lineNumber: 122,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2728,57 +2798,107 @@ const PvPArena = ()=>{
                                         children: "Status"
                                     }, void 0, false, {
                                         fileName: "[project]/components/game/PvPArena.tsx",
-                                        lineNumber: 135,
+                                        lineNumber: 132,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full",
-                                        children: "PLAYING"
+                                        className: `text-xs font-bold px-2 py-1 rounded-full ${isFirebaseConnected ? 'text-indigo-600 bg-indigo-50' : 'text-rose-600 bg-rose-50 animate-pulse'}`,
+                                        children: isFirebaseConnected ? 'LIVE SYNC' : 'OFFLINE'
                                     }, void 0, false, {
                                         fileName: "[project]/components/game/PvPArena.tsx",
-                                        lineNumber: 136,
+                                        lineNumber: 133,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 134,
+                                lineNumber: 131,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 123,
+                        lineNumber: 121,
                         columnNumber: 17
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    lastSyncError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+                        initial: {
+                            opacity: 0,
+                            y: 10
+                        },
+                        animate: {
+                            opacity: 1,
+                            y: 0
+                        },
+                        className: "mx-3 mb-2 px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-2 overflow-hidden",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                size: 14,
+                                className: "text-rose-500 shrink-0"
+                            }, void 0, false, {
+                                fileName: "[project]/components/game/PvPArena.tsx",
+                                lineNumber: 146,
+                                columnNumber: 25
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex flex-col min-w-0",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-[9px] font-black text-rose-400 uppercase tracking-wider",
+                                        children: "Sync Error"
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/game/PvPArena.tsx",
+                                        lineNumber: 148,
+                                        columnNumber: 29
+                                    }, ("TURBOPACK compile-time value", void 0)),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-[10px] font-medium text-rose-600 truncate",
+                                        children: lastSyncError
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/game/PvPArena.tsx",
+                                        lineNumber: 149,
+                                        columnNumber: 29
+                                    }, ("TURBOPACK compile-time value", void 0))
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/components/game/PvPArena.tsx",
+                                lineNumber: 147,
+                                columnNumber: 25
+                            }, ("TURBOPACK compile-time value", void 0))
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/components/game/PvPArena.tsx",
+                        lineNumber: 141,
+                        columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "scale-90 origin-center md:scale-100",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$GameControls$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GameControls"], {}, void 0, false, {
                             fileName: "[project]/components/game/PvPArena.tsx",
-                            lineNumber: 144,
+                            lineNumber: 155,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 143,
+                        lineNumber: 154,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "w-full",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Numpad$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Numpad"], {}, void 0, false, {
                             fileName: "[project]/components/game/PvPArena.tsx",
-                            lineNumber: 149,
+                            lineNumber: 159,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 148,
+                        lineNumber: 158,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         onClick: ()=>{
                             __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().setMultiplayerState({
-                                mode: 'single',
+                                mode: 'pvp',
                                 status: 'idle',
                                 roomId: null
                             });
@@ -2789,20 +2909,20 @@ const PvPArena = ()=>{
                                 size: 18
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 159,
+                                lineNumber: 168,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Leave"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 153,
+                        lineNumber: 162,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/game/PvPArena.tsx",
-                lineNumber: 120,
+                lineNumber: 118,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2832,7 +2952,7 @@ const PvPArena = ()=>{
                                 className: `absolute top-0 left-0 w-full h-2 ${status === 'won' ? 'bg-gradient-to-r from-indigo-400 to-cyan-400' : 'bg-gradient-to-r from-rose-500 to-orange-500'}`
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 179,
+                                lineNumber: 187,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2841,26 +2961,26 @@ const PvPArena = ()=>{
                                     size: 40
                                 }, void 0, false, {
                                     fileName: "[project]/components/game/PvPArena.tsx",
-                                    lineNumber: 182,
+                                    lineNumber: 190,
                                     columnNumber: 53
                                 }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__["XCircle"], {
                                     size: 40
                                 }, void 0, false, {
                                     fileName: "[project]/components/game/PvPArena.tsx",
-                                    lineNumber: 182,
+                                    lineNumber: 190,
                                     columnNumber: 76
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 181,
+                                lineNumber: 189,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                className: `text-4xl font-black mb-2 ${status === 'won' ? 'text-slate-800' : 'text-slate-800'}`,
+                                className: "text-4xl font-black mb-2 text-slate-800",
                                 children: status === 'won' ? 'Victory!' : 'Defeat'
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 185,
+                                lineNumber: 193,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2868,7 +2988,7 @@ const PvPArena = ()=>{
                                 children: status === 'won' ? `You crushed it! ${opponentName} didn't stand a chance.` : `${opponentName} solved it first. Better luck next time!`
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 188,
+                                lineNumber: 196,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2881,33 +3001,33 @@ const PvPArena = ()=>{
                                 children: "Back to Lobby"
                             }, void 0, false, {
                                 fileName: "[project]/components/game/PvPArena.tsx",
-                                lineNumber: 194,
+                                lineNumber: 202,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/game/PvPArena.tsx",
-                        lineNumber: 173,
+                        lineNumber: 182,
                         columnNumber: 25
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/components/game/PvPArena.tsx",
-                    lineNumber: 167,
+                    lineNumber: 176,
                     columnNumber: 21
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/game/PvPArena.tsx",
-                lineNumber: 165,
+                lineNumber: 174,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/game/PvPArena.tsx",
-        lineNumber: 73,
+        lineNumber: 74,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s(PvPArena, "THeDUsc3KPfxGZD7J5W3JUPziQ8=", false, function() {
+_s(PvPArena, "/hHUCLoYMSZiT1nefkgvgIWjPa0=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"]
     ];
@@ -2938,14 +3058,17 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-client] (ecmascript) <export default as Users>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/user.js [app-client] (ecmascript) <export default as User>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$swords$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Swords$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/swords.js [app-client] (ecmascript) <export default as Swords>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trophy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trophy$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/trophy.js [app-client] (ecmascript) <export default as Trophy>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-x.js [app-client] (ecmascript) <export default as XCircle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$auth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/firebase/auth.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/firebase/rooms.ts [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
+;
+;
 ;
 ;
 ;
@@ -2993,6 +3116,35 @@ function Home() {
         startGame,
         difficulty
     ]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "Home.useEffect": ()=>{
+            // Auth Listener
+            const unsubAuth = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$auth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["listenToAuth"])({
+                "Home.useEffect.unsubAuth": (user)=>{
+                    if (user) {
+                        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].setState({
+                            uid: user.uid,
+                            playerName: user.displayName || 'Guest'
+                        });
+                    }
+                }
+            }["Home.useEffect.unsubAuth"]);
+            // Connection Listener
+            const unsubConn = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["listenToConnection"])({
+                "Home.useEffect.unsubConn": (connected)=>{
+                    __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].setState({
+                        isFirebaseConnected: connected
+                    });
+                }
+            }["Home.useEffect.unsubConn"]);
+            return ({
+                "Home.useEffect": ()=>{
+                    unsubAuth();
+                    unsubConn();
+                }
+            })["Home.useEffect"];
+        }
+    }["Home.useEffect"], []);
     // Centralized Timer Logic
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Home.useEffect": ()=>{
@@ -3017,7 +3169,7 @@ function Home() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$HintToast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["HintToast"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 46,
+                lineNumber: 70,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3031,7 +3183,7 @@ function Home() {
                                 size: 16
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 54,
+                                lineNumber: 78,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3039,38 +3191,13 @@ function Home() {
                                 children: "Single"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 55,
+                                lineNumber: 79,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 50,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        onClick: ()=>startGame('Medium', 'bot'),
-                        className: `flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'bot' ? 'bg-cyan-600 text-white border-cyan-600 shadow-lg shadow-cyan-100' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-cyan-200 hover:text-cyan-600'}`,
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$swords$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Swords$3e$__["Swords"], {
-                                size: 16
-                            }, void 0, false, {
-                                fileName: "[project]/app/page.tsx",
-                                lineNumber: 61,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "hidden sm:inline font-bold text-xs uppercase tracking-wider",
-                                children: "AI Bot"
-                            }, void 0, false, {
-                                fileName: "[project]/app/page.tsx",
-                                lineNumber: 62,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/app/page.tsx",
-                        lineNumber: 57,
+                        lineNumber: 74,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3084,7 +3211,7 @@ function Home() {
                                 size: 16
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 68,
+                                lineNumber: 85,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3092,29 +3219,29 @@ function Home() {
                                 children: "PvP"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 69,
+                                lineNumber: 86,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 64,
+                        lineNumber: 81,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 49,
+                lineNumber: 73,
                 columnNumber: 7
             }, this),
-            mode === 'pvp' ? // PvP Mode: Show Lobby or Arena
+            mode === 'pvp' || mode === 'bot' ? // PvP or Bot Mode: Show Lobby or Arena
             status === 'idle' || status === 'waiting' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$layout$2f$Lobby$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Lobby"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 76,
+                lineNumber: 93,
                 columnNumber: 11
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$PvPArena$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PvPArena"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 78,
+                lineNumber: 95,
                 columnNumber: 11
             }, this) : // Single Player Mode
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3139,30 +3266,30 @@ function Home() {
                                                 children: diff
                                             }, diff, false, {
                                                 fileName: "[project]/app/page.tsx",
-                                                lineNumber: 90,
+                                                lineNumber: 107,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 88,
+                                        lineNumber: 105,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "text-2xl sm:text-3xl font-bold text-slate-800 font-mono",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Timer$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Timer"], {}, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 100,
+                                            lineNumber: 117,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 99,
+                                        lineNumber: 116,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 87,
+                                lineNumber: 104,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3171,23 +3298,23 @@ function Home() {
                                     className: "h-full w-full max-w-full aspect-square flex items-center justify-center",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Board$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Board"], {}, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 108,
+                                        lineNumber: 125,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 107,
+                                    lineNumber: 124,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 105,
+                                lineNumber: 122,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 85,
+                        lineNumber: 102,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3203,7 +3330,7 @@ function Home() {
                                             children: "Mistakes"
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 119,
+                                            lineNumber: 136,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3211,42 +3338,42 @@ function Home() {
                                             children: status === 'playing' ? `${mistakes}/3` : '-/-'
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 120,
+                                            lineNumber: 137,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 118,
+                                    lineNumber: 135,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 117,
+                                lineNumber: 134,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "scale-90 origin-center md:scale-100",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$GameControls$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GameControls"], {}, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 128,
+                                    lineNumber: 145,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 127,
+                                lineNumber: 144,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "w-full",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Numpad$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Numpad"], {}, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 133,
+                                    lineNumber: 150,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 132,
+                                lineNumber: 149,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3255,13 +3382,13 @@ function Home() {
                                 children: status === 'playing' ? 'Restart' : 'New Game'
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 137,
+                                lineNumber: 154,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 114,
+                        lineNumber: 131,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -3293,7 +3420,7 @@ function Home() {
                                         className: `absolute top-0 left-0 w-full h-2 ${status === 'won' ? 'bg-gradient-to-r from-indigo-400 to-cyan-400' : 'bg-gradient-to-r from-rose-500 to-orange-500'}`
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 160,
+                                        lineNumber: 177,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3302,18 +3429,18 @@ function Home() {
                                             size: 40
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 163,
+                                            lineNumber: 180,
                                             columnNumber: 41
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__["XCircle"], {
                                             size: 40
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 163,
+                                            lineNumber: 180,
                                             columnNumber: 64
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 162,
+                                        lineNumber: 179,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -3321,7 +3448,7 @@ function Home() {
                                         children: status === 'won' ? 'Victory!' : 'Failed'
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 166,
+                                        lineNumber: 183,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3329,7 +3456,7 @@ function Home() {
                                         children: status === 'won' ? `Impressive! You've mastered the ${difficulty} board.` : "The numbers got the better of you this time. Ready to try again?"
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 169,
+                                        lineNumber: 186,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3338,39 +3465,39 @@ function Home() {
                                         children: "Play Again"
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 175,
+                                        lineNumber: 192,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 154,
+                                lineNumber: 171,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/page.tsx",
-                            lineNumber: 148,
+                            lineNumber: 165,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 146,
+                        lineNumber: 163,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 82,
+                lineNumber: 99,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 43,
+        lineNumber: 67,
         columnNumber: 5
     }, this);
 }
-_s(Home, "y0+YubI+yFH/En5s0tVn3uNsJqg=", false, function() {
+_s(Home, "OIHbskOGXO4DRBBPq1+ITErmMDI=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"],

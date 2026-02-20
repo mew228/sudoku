@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { generateSudoku, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
 import { getSmartHint, HintResult } from './logic/hints';
-import { updateProgress, updateBoardCell } from './firebase/rooms';
 import { updateUserStats, UserStats } from './firebase/users';
 
 interface GameState {
@@ -21,6 +20,9 @@ interface GameState {
     lastHint: HintResult | null;
     hoveredCell: { r: number, c: number } | null;
     highlightedNumber: number | null;
+    opponentHoveredCells: { r: number, c: number }[];
+    cellOwners: Record<string, string>;
+    currentTurn: string | null;
 
     // Multiplayer
     mode: 'single' | 'pvp' | 'bot';
@@ -45,6 +47,8 @@ interface GameState {
 
     // PvP Actions
     setMultiplayerState: (state: Partial<GameState>) => void;
+    syncAction: ((action: { type: 'CELL', r: number, c: number, val: number, progress: number, mistakes: number, status: 'playing' | 'won' | 'lost', switchTurn?: boolean }) => void) | null;
+    setSyncAction: (fn: GameState['syncAction']) => void;
 
     // Hint
     getHint: () => void;
@@ -53,6 +57,8 @@ interface GameState {
     setHoveredCell: (cell: { r: number, c: number } | null) => void;
     setHighlightedNumber: (num: number | null) => void;
     setRemoteBoard: (board: number[][]) => void;
+    setCellOwners: (owners: Record<string, string>) => void;
+    setCurrentTurn: (uid: string | null) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -72,6 +78,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     lastHint: null,
     hoveredCell: null,
     highlightedNumber: null,
+    opponentHoveredCells: [],
+    cellOwners: {},
+    currentTurn: null,
 
     mode: 'single',
     roomId: null,
@@ -83,8 +92,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     opponentStatus: null,
     isFirebaseConnected: true, // Default to true, listener will update
     lastSyncError: null,
+    syncAction: null,
 
+    setSyncAction: (fn) => set({ syncAction: fn }),
     setRemoteBoard: (board: number[][]) => set({ board }),
+    setCellOwners: (owners: Record<string, string>) => set({ cellOwners: owners }),
+    setCurrentTurn: (uid: string | null) => set({ currentTurn: uid }),
 
     startGame: (difficulty: Difficulty, mode: 'single' | 'pvp' | 'bot' = 'single') => {
         const { initial, solved } = generateSudoku(difficulty);
@@ -101,6 +114,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             selectedCell: null,
             hintsRemaining: 3,
             lastHint: null,
+            cellOwners: {},
             mode
         });
 
@@ -151,9 +165,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     toggleNotesMode: () => set(state => ({ isNotesMode: !state.isNotesMode })),
 
     setCellValue: (num: number) => {
-        const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, roomId } = get();
+        const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, uid, currentTurn } = get();
 
         if (!selectedCell || status === 'won' || status === 'lost') return;
+
+        // Enforce turn-based logic
+        if (mode === 'pvp' && currentTurn && uid !== currentTurn) return;
+
         const { r, c } = selectedCell;
 
         if (initialBoard[r][c] !== BLANK) return;
@@ -200,18 +218,12 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
             }
 
-            if (mode === 'pvp' && roomId) {
-                updateBoardCell(roomId, r, c, num).catch(e => {
-                    console.error("Board Sync Failed:", e);
-                    set({ lastSyncError: `Board Sync: ${e.message}` });
-                });
-
+            if (mode === 'pvp') {
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
-                updateProgress(roomId, progress, mistakes, isWon ? 'won' : 'playing')
-                    .catch(e => {
-                        console.error("Progress Sync Failed:", e);
-                        set({ lastSyncError: `Progress Sync: ${e.message}` });
-                    });
+                const action = get().syncAction;
+                if (action) {
+                    action({ type: 'CELL', r, c, val: num, progress, mistakes, status: isWon ? 'won' : 'playing', switchTurn: true });
+                }
             }
 
         } else {
@@ -233,25 +245,19 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
             }
 
-            if (mode === 'pvp' && roomId) {
-                updateBoardCell(roomId, r, c, num).catch(e => {
-                    console.error("Mistake Board Sync Failed:", e);
-                    set({ lastSyncError: `Board Sync: ${e.message}` });
-                });
-
+            if (mode === 'pvp') {
                 let filled = 0;
-                for (let i = 0; i < GRID_SIZE; i++) {
-                    for (let j = 0; j < GRID_SIZE; j++) {
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
                         if (newBoard[i][j] !== 0) filled++;
                     }
                 }
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
 
-                updateProgress(roomId, progress, newMistakes, isLost ? 'lost' : 'playing')
-                    .catch(e => {
-                        console.error("Mistake Progress Sync Failed:", e);
-                        set({ lastSyncError: `Mistake Sync: ${e.message}` });
-                    });
+                const action = get().syncAction;
+                if (action) {
+                    action({ type: 'CELL', r, c, val: num, progress, mistakes: newMistakes, status: isLost ? 'lost' : 'playing', switchTurn: true });
+                }
             }
         }
     },
@@ -276,6 +282,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             history: [],
             hintsRemaining: 3,
             lastHint: null,
+            cellOwners: {},
             status: 'playing'
         });
     },

@@ -1,262 +1,62 @@
-[00:00:03.253] Server  LOG     ✓ Ready in 2.3s
-[00:00:03.305] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:03.305] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:00:03.305] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:00:03.306] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:03.306] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:00:03.306] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:00:04.376] Server  LOG     Initializing Firebase with config: {}
-[00:00:04.382] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:00:06.691] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:06.691] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:00:06.691] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:01:04.644] Browser LOG     Checking Room ID: KKPPDJ
-[00:01:10.896] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:11.155] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:01:11.155] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:01:24.865] Browser LOG     Checking Room ID: BKPJKV
-[00:01:33.821] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:33.821] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:01:33.821] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:07:24.978] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:07:24.978] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:07:24.978] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:07:35.874] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:07:35.874] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:07:35.874] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:07:44.686] Browser LOG     Checking Room ID: 9DRJFD
-[00:12:20.103] Browser ERROR   uncaughtError: NotFoundError: Failed to execute 'releasePointerCapture' on 'Element': No active pointer with the given id is found.
-[00:17:30.747] Server  LOG     ✓ Compiled in 933ms
-[00:18:04.435] Server  LOG     ✓ Compiled in 113ms
-[00:18:41.693] Server  LOG     ✓ Compiled in 100ms
-[00:18:59.678] Server  LOG     ✓ Compiled in 204ms
-[00:21:22.239] Server  LOG     Initializing Firebase with config: {}
-[00:21:22.247] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:21:22.324] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:21:22.324] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:21:22.324] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:21:25.296] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:21:25.296] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:21:25.296] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:22:00.961] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:22:00.962] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:22:00.962] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:22:25.839] Browser LOG     Checking Room ID: WZJRNF
-[00:25:53.255] Browser LOG     Checking Room ID: ZQA3D4
-[00:28:45.102] Server  LOG     ✓ Compiled in 128ms
-[00:29:19.372] Server  LOG     ✓ Compiled in 93ms
-[00:29:19.783] Browser ERROR   ./components/game/PvPArena.tsx:70:5
-Parsing ecmascript source code failed
-  68 |
-  69 |     return (
-> 70 |     return (
-     |     ^^^^^^
-  71 |         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
-  72 |
-  73 |             {/* Left/Top: Header & Board - Flex Grow */}
+[00:00:03.106] Server  LOG     ✓ Ready in 2.2s
+[00:00:05.939] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.578] Browser ERROR   uncaughtError: Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
-Expression expected
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
 
-Import traces:
-  Client Component Browser:
-    ./components/game/PvPArena.tsx [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
-  Client Component SSR:
-    ./components/game/PvPArena.tsx [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:29:19.784] Browser ERROR   ./components/game/PvPArena.tsx:70:5
-Parsing ecmascript source code failed
-  68 |
-  69 |     return (
-> 70 |     return (
-     |     ^^^^^^
-  71 |         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
-  72 |
-  73 |             {/* Left/Top: Header & Board - Flex Grow */}
+https://react.dev/link/hydration-mismatch
 
-Expression expected
+  ...
+    <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+        <LoadingBoundary name="/" loading={null}>
+          <HTTPAccessFallbackBoundary notFound={<SegmentViewNode>} forbidden={undefined} unauthorized={undefined}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<SegmentViewNode>} forbidden={undefined} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} ...>
+                    <SegmentViewNode type="page" pagePath="page.tsx">
+                      <SegmentTrieNode>
+                      <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
+                        <Home params={Promise} searchParams={Promise}>
+                          <main className="flex h-dvh...">
+                            <HintToast>
+                            <div className="absolute t...">
+                              <button>
+                              <button
+                                onClick={function onClick}
++                               className="flex items-center gap-2 px-4 py-2 rounded-full transition-all border bg-whi..."
+-                               className="flex items-center gap-2 px-4 py-2 rounded-full transition-all border bg-whi..."
+                              >
+                                <Swords size={16}>
+                                  <svg
+                                    ref={null}
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width={16}
+                                    height={16}
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
++                                   className="lucide lucide-swords"
+-                                   className="lucide lucide-users"
+                                    aria-hidden="true"
+                                  >
++                                   <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5">
+-                                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2">
+                                    ...
+                                ...
+                              ...
+                            ...
+                    ...
+                  ...
+      ...
 
-Import traces:
-  Client Component Browser:
-    ./components/game/PvPArena.tsx [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./components/game/PvPArena.tsx [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:33:40.180] Server  LOG     ✓ Compiled in 98ms
-[00:37:48.452] Server  LOG     Initializing Firebase with config: {}
-[00:37:48.460] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:37:48.533] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:37:48.533] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:37:48.533] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:38:00.423] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:38:00.423] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:38:00.423] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:38:35.399] Browser LOG     Checking Room ID: X78R29
-[00:41:52.122] Server  LOG     ✓ Compiled in 147ms
-[00:44:00.913] Server  LOG     Initializing Firebase with config: {}
-[00:44:00.923] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:44:01.203] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:44:01.203] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:44:01.203] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:45:09.223] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:45:09.223] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:45:09.223] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:45:15.792] Browser LOG     Checking Room ID: RWMYG8
-[00:47:04.620] Server  LOG     ✓ Compiled in 61ms
-[00:48:33.492] Server  LOG     ✓ Compiled in 56ms
-[03:30:58.479] Server  LOG     Initializing Firebase with config: {}
-[03:30:58.489] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[03:30:58.576] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:30:58.576] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[03:30:58.576] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[03:31:04.569] Browser LOG     Checking Room ID: D68NPN
-[03:31:11.059] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:31:11.059] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[03:31:11.059] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[03:31:20.227] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:31:20.227] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[03:31:20.227] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[03:36:15.691] Server  LOG     ✓ Compiled in 200ms
-[03:36:52.196] Server  LOG     ✓ Compiled in 156ms
-[03:36:52.773] Browser ERROR   ./lib/store.ts:192:15
-Parsing ecmascript source code failed
-  190 |
-  191 |     undo: () => {
-> 192 |         const { history } = get();
-      |               ^
-  193 |         if (history.length === 0) return;
-  194 |         const previousBoard = history[history.length - 1];
-  195 |         set({
-
-Expected ';', got '{'
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[03:36:52.773] Browser ERROR   ./lib/store.ts:192:15
-Parsing ecmascript source code failed
-  190 |
-  191 |     undo: () => {
-> 192 |         const { history } = get();
-      |               ^
-  193 |         if (history.length === 0) return;
-  194 |         const previousBoard = history[history.length - 1];
-  195 |         set({
-
-Expected ';', got '{'
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[03:37:23.778] Browser ERROR   ./lib/store.ts:192:15
-Parsing ecmascript source code failed
-  190 |
-  191 |     undo: () => {
-> 192 |         const { history } = get();
-      |               ^
-  193 |         if (history.length === 0) return;
-  194 |         const previousBoard = history[history.length - 1];
-  195 |         set({
-
-Expected ';', got '{'
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[03:37:23.779] Browser ERROR   ./lib/store.ts:192:15
-Parsing ecmascript source code failed
-  190 |
-  191 |     undo: () => {
-> 192 |         const { history } = get();
-      |               ^
-  193 |         if (history.length === 0) return;
-  194 |         const previousBoard = history[history.length - 1];
-  195 |         set({
-
-Expected ';', got '{'
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[03:37:42.175] Server  LOG     ✓ Compiled in 117ms
-[03:38:13.023] Server  LOG     ✓ Compiled in 84ms
-[03:38:51.150] Server  LOG     Initializing Firebase with config: {}
-[03:38:51.158] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[03:38:51.255] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:38:51.255] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[03:38:51.255] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[03:39:05.184] Server  LOG     ✓ Compiled in 107ms
-[03:39:56.733] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:40:09.958] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:40:09.958] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:44:21.722] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:44:27.024] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:44:27.024] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:46:21.177] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:46:26.012] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:46:26.012] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
-[03:52:15.027] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:52:23.289] Browser ERROR   Lobby Create Error: {}
-[03:53:18.945] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[03:54:16.117] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[04:01:15.952] Server  LOG     ✓ Compiled in 105ms
-[04:06:56.233] Server  LOG     ✓ Compiled in 62ms
-[04:07:06.771] Server  LOG     ✓ Compiled in 61ms
-[04:07:14.283] Server  LOG     ✓ Compiled in 61ms
-[04:07:30.220] Server  LOG     ✓ Compiled in 63ms
-[04:07:42.291] Server  LOG     ✓ Compiled in 76ms
-[04:07:52.243] Server  LOG     ✓ Compiled in 65ms
-[04:11:37.898] Server  LOG     ✓ Compiled in 111ms
-[04:11:38.782] Browser ERROR   uncaughtError: ReferenceError: Swords is not defined
-[04:11:39.414] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[04:11:39.856] Server  ERROR   ⨯ ReferenceError: Swords is not defined
-[04:11:39.881] Server  LOG     ✓ Compiled in 98ms
-[04:11:39.903] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[04:12:09.077] Server  LOG     ✓ Compiled in 105ms
-[04:12:11.142] Server  LOG     ✓ Compiled in 64ms
-[04:12:11.783] Browser ERROR   uncaughtError: ReferenceError: useSound is not defined
-[04:12:12.660] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[04:12:13.169] Server  LOG     ✓ Compiled in 131ms
-[04:12:13.213] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[04:12:13.213] Browser ERROR   uncaughtError: ReferenceError: Swords is not defined
-[04:12:14.350] Server  LOG     ✓ Compiled in 62ms
-[04:12:15.849] Server  LOG     ✓ Compiled in 70ms
-[04:12:38.160] Server  LOG     ✓ Compiled in 61ms
-[04:12:40.464] Server  LOG     ✓ Compiled in 62ms
-[04:13:13.157] Server  LOG     ✓ Compiled in 69ms
-[04:43:57.890] Server  LOG     ✓ Compiled in 54ms

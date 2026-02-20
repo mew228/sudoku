@@ -2,11 +2,8 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { createRoom, joinRoom, subscribeToRoom } from '@/lib/firebase/rooms';
 import { signInUser } from '@/lib/firebase/auth';
 import { getUserProfile } from '@/lib/firebase/users';
-import { db } from '@/lib/firebase/firebase';
-import { ref, get } from 'firebase/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, Users, ArrowLeft, Loader2, Swords } from 'lucide-react';
 
@@ -27,12 +24,18 @@ export const Lobby = () => {
         setError('');
         setLoading(true);
         try {
-            // 1. Sign in the user
+            // 1. Sign in the user (still using Firebase Auth for identity)
             const user = await signInUser(name.trim());
             // 2. Setup user profile
             await getUserProfile(user.uid, name.trim());
 
-            const id = await createRoom(name.trim(), 'Medium');
+            // Generate a random 6-char Liveblocks room code
+            const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            let id = '';
+            for (let i = 0; i < 6; i++) {
+                id += chars[Math.floor(Math.random() * chars.length)];
+            }
+
             setCreatedRoomId(id);
             setMultiplayerState({
                 roomId: id,
@@ -42,24 +45,6 @@ export const Lobby = () => {
                 status: 'waiting'
             });
 
-            // Listen for opponent joining
-            const unsubscribe = subscribeToRoom(id, (room) => {
-                if (room.status === 'playing') {
-                    setMultiplayerState({
-                        status: 'playing',
-                        board: room.board || room.initialBoard,
-                        initialBoard: room.initialBoard,
-                        solvedBoard: room.solvedBoard,
-                        difficulty: room.difficulty
-                    });
-                    const currentUid = useGameStore.getState().uid;
-                    const opponent = Object.entries(room.players || {}).find(([id]) => id !== currentUid)?.[1];
-                    if (opponent) {
-                        setMultiplayerState({ opponentName: (opponent as any).name });
-                    }
-                    unsubscribe();
-                }
-            });
         } catch (error: unknown) {
             console.error("Lobby Create Error:", error);
             const msg = error instanceof Error ? error.message : "Failed to create room";
@@ -84,35 +69,17 @@ export const Lobby = () => {
             // 2. Setup user profile
             await getUserProfile(user.uid, name.trim());
 
-            await joinRoom(code, name.trim());
             setMultiplayerState({
                 roomId: code,
                 playerId: name.trim(),
                 uid: user.uid,
-                mode: 'pvp'
+                mode: 'pvp',
+                status: 'waiting' // Liveblocks RoomProvider inside PvPArena will transition this to 'playing' when enough players connect
             });
 
-            const unsubscribe = subscribeToRoom(code, (room) => {
-                if (room.status === 'playing') {
-                    setMultiplayerState({
-                        status: 'playing',
-                        board: room.board || room.initialBoard,
-                        initialBoard: room.initialBoard,
-                        solvedBoard: room.solvedBoard,
-                        difficulty: room.difficulty
-                    });
-                    const currentUid = useGameStore.getState().uid;
-                    const opponent = Object.entries(room.players || {}).find(([id]) => id !== currentUid)?.[1];
-                    if (opponent) {
-                        setMultiplayerState({ opponentName: (opponent as any).name });
-                    }
-                    unsubscribe();
-                }
-            });
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : "Failed to join room";
             setError(msg);
-            alert(msg); // Force visible error for debugging
         } finally {
             setLoading(false);
         }
@@ -123,27 +90,6 @@ export const Lobby = () => {
         navigator.clipboard.writeText(createdRoomId);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-    };
-
-
-
-    const testConnection = async () => {
-        setLoading(true);
-        try {
-            if (!db) throw new Error("Database not initialized");
-
-            console.log("Testing connection...", db);
-            const testRef = ref(db, "status");
-
-            console.log("Getting snapshot...");
-            await get(testRef);
-            alert(`Firebase Connected!`);
-        } catch (e) {
-            console.error("Connection Test Failed:", e);
-            alert(`Connection Test Failed: ${e instanceof Error ? e.message : String(e)}`);
-        } finally {
-            setLoading(false);
-        }
     };
 
     // --- "Waiting for Opponent" Screen ---
@@ -177,9 +123,20 @@ export const Lobby = () => {
                     </div>
 
                     {/* Waiting indicator */}
-                    <div className="flex items-center justify-center gap-3 text-indigo-500">
-                        <Loader2 size={18} className="animate-spin" />
-                        <span className="text-sm font-medium">Waiting for opponent...</span>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-center gap-3 text-indigo-500">
+                            <Loader2 size={18} className="animate-spin" />
+                            <span className="text-sm font-medium">Waiting for opponent to connect...</span>
+                        </div>
+                        <button
+                            onClick={() => {
+                                // Transition directly to Arena, it will handle waiting states via Liveblocks
+                                useGameStore.getState().setMultiplayerState({ status: 'playing' });
+                            }}
+                            className="mt-2 text-indigo-600 text-sm font-bold underline decoration-indigo-200 underline-offset-4"
+                        >
+                            Or join the room now
+                        </button>
                     </div>
 
                     {/* Back button */}
@@ -297,8 +254,6 @@ export const Lobby = () => {
                         </motion.p>
                     )}
                 </AnimatePresence>
-
-                {/* Debug Tool removed - connection verified */}
             </div>
         </motion.div>
     );

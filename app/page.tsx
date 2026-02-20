@@ -12,7 +12,6 @@ import { useEffect } from "react";
 import { Users, User, Swords, Trophy, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { listenToAuth } from "@/lib/firebase/auth";
-import { listenToConnection } from "@/lib/firebase/rooms";
 
 export default function Home() {
   const startGame = useGameStore(state => state.startGame);
@@ -41,14 +40,8 @@ export default function Home() {
       }
     });
 
-    // Connection Listener
-    const unsubConn = listenToConnection((connected: boolean) => {
-      useGameStore.setState({ isFirebaseConnected: connected });
-    });
-
     return () => {
       unsubAuth();
-      unsubConn();
     };
   }, []);
 

@@ -1,74 +1,195 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { subscribeToRoom, subscribeToPlayers } from '@/lib/firebase/rooms';
 import { Board } from './Board';
 import { GameControls } from './GameControls';
 import { Numpad } from './Numpad';
 import { Timer } from './Timer';
-import { Users, Trophy, XCircle, AlertCircle } from 'lucide-react';
+import { Users, Trophy, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RoomProvider, useStorage, useMutation, useMyPresence, useOthers } from '@/liveblocks.config';
+import { ClientSideSuspense } from '@liveblocks/react';
+import { LiveList, LiveMap, LiveObject } from '@liveblocks/client';
+import { generateSudoku, Difficulty } from '@/lib/logic/sudoku';
 
-export const PvPArena = () => {
+const PvPArenaContent = () => {
     const {
-        difficulty,
-        status,
+        status: localStatus,
         opponentName,
         opponentProgress,
         mistakes,
         mode,
-        opponentStatus,
-        roomId,
-        playerId,
         uid,
-        isFirebaseConnected,
-        lastSyncError,
-        setMultiplayerState
+        playerName,
+        setMultiplayerState,
+        setRemoteBoard,
+        setSyncAction,
+        setCellOwners,
+        setCurrentTurn,
+        hoveredCell,
+        selectedCell,
+        currentTurn
     } = useGameStore();
 
-    // Effect to handle game over states
+    // Liveblocks State
+    const lbStatus = useStorage((root) => root.status);
+    const lbWinner = useStorage((root) => root.winner);
+    const lbBoard = useStorage((root) => root.board);
+    const lbPlayers = useStorage((root) => root.players);
+    const lbCellOwners = useStorage((root) => root.cellOwners);
+    const lbCurrentTurn = useStorage((root) => root.currentTurn);
+    const isFirebaseConnected = true; // Always connected when LB suspense renders
+
+    // Presence
+    const [myPresence, updateMyPresence] = useMyPresence();
+    const others = useOthers();
+
+    // Broadcast local hover/select state
     useEffect(() => {
-        if (opponentStatus === 'won' && status !== 'lost' && status !== 'won') {
-            useGameStore.setState({ status: 'lost' });
+        updateMyPresence({
+            hoveredCell: hoveredCell || selectedCell || null
+        });
+    }, [hoveredCell, selectedCell, updateMyPresence]);
+
+    // Receive opponent presence
+    useEffect(() => {
+        const opponentCells = others
+            .map(other => other.presence.hoveredCell)
+            .filter(Boolean) as { r: number, c: number }[];
+
+        useGameStore.setState({ opponentHoveredCells: opponentCells });
+    }, [others]);
+
+    // Join room mutation: adds player to the LiveMap
+    const joinRoom = useMutation(({ storage }, playerUid: string, name: string) => {
+        const players = storage.get("players");
+        if (!players.has(playerUid)) {
+            players.set(playerUid, new LiveObject({
+                name,
+                progress: 0,
+                mistakes: 0,
+                status: "playing"
+            }));
         }
-    }, [opponentStatus, status]);
 
-    // Effect to subscribe to room updates
+        // If >= 2 players, start game
+        if (Array.from(players.keys()).length >= 2 && storage.get("status") === "waiting") {
+            storage.set("status", "playing");
+            // Set first player's turn to whoever was in the room first
+            const firstPlayerUid = Array.from(players.keys())[0];
+            storage.set("currentTurn", firstPlayerUid);
+        }
+    }, []);
+
+    // Sync Action: called when the local player makes a move
+    const syncToLiveblocks = useMutation(({ storage }, action: Parameters<NonNullable<ReturnType<typeof useGameStore.getState>['syncAction']>>[0]) => {
+        if (!uid) return;
+
+        // Update board and cell ownership
+        if (action.r !== undefined && action.c !== undefined && action.val !== undefined) {
+            const index = action.r * 9 + action.c;
+            storage.get("board").set(index, action.val);
+            storage.get("cellOwners").set(`${action.r},${action.c}`, uid);
+        }
+
+        // Update player stats
+        const players = storage.get("players");
+        const me = players.get(uid);
+        if (me) {
+            me.update({
+                progress: action.progress,
+                mistakes: action.mistakes,
+                status: action.status
+            });
+        }
+
+        // Update winner if won
+        if (action.status === 'won') {
+            storage.set("winner", playerName);
+            storage.set("status", "finished");
+            storage.set("currentTurn", null);
+        } else if (action.switchTurn) {
+            // Find the other player's UID and set it as their turn
+            // Note: In 2-player game, we just find the UID that is not ours
+            const playerUids = Array.from(players.keys());
+            const nextTurnUid = playerUids.find(id => id !== uid);
+            if (nextTurnUid) {
+                storage.set("currentTurn", nextTurnUid);
+            }
+        }
+    }, [uid, playerName]);
+
+    // Setup Sync Action on mount
     useEffect(() => {
-        if (!roomId || !playerId) return;
+        setSyncAction(syncToLiveblocks);
+        return () => setSyncAction(null);
+    }, [setSyncAction, syncToLiveblocks]);
 
-        const unsubPlayers = subscribeToPlayers(roomId, (players) => {
-            const currentUid = useGameStore.getState().uid;
+    // Join room initially
+    useEffect(() => {
+        if (uid && playerName) {
+            joinRoom(uid, playerName);
+        }
+    }, [uid, playerName, joinRoom]);
 
-            // Find opponent by excluding current user's UID
-            const opponentEntry = Object.entries(players || {}).find(([id]) => id !== currentUid);
-            const opponent = opponentEntry ? opponentEntry[1] as any : null;
+    // Sync Liveblocks -> Zustand
+    useEffect(() => {
+        if (!lbPlayers || !uid) return;
 
-            if (opponent) {
-                setMultiplayerState({
-                    opponentName: opponent.name,
-                    opponentProgress: opponent.progress,
-                    opponentStatus: opponent.status
-                });
+        // Find opponent (first player that isn't us)
+        let opponent = null;
+        // Since LiveMap comes back as a plain object/Map in useStorage depending on version, 
+        // we can iterate it. If it's a Map:
+        if (lbPlayers instanceof Map) {
+            for (const [pUid, playerObj] of lbPlayers.entries()) {
+                if (pUid !== uid) opponent = playerObj;
             }
-        });
-
-        // Subscribe to SHARED BOARD
-        import('@/lib/firebase/rooms').then(({ subscribeToBoard }) => {
-            if (roomId) {
-                subscribeToBoard(roomId, (remoteBoard) => {
-                    if (remoteBoard) {
-                        useGameStore.getState().setRemoteBoard(remoteBoard);
-                    }
-                });
+        } else {
+            for (const [pUid, playerObj] of Object.entries(lbPlayers)) {
+                if (pUid !== uid) opponent = playerObj;
             }
-        });
+        }
 
-        return () => {
-            unsubPlayers();
-        };
-    }, [roomId, mode, playerId, uid, setMultiplayerState]);
+        if (opponent) {
+            setMultiplayerState({
+                opponentName: opponent.name,
+                opponentProgress: opponent.progress,
+                opponentStatus: opponent.status as 'playing' | 'won' | 'lost'
+            });
+        }
+
+        if (lbStatus) {
+            if (lbStatus === 'playing' && (localStatus === 'waiting' || localStatus === 'idle')) {
+                setMultiplayerState({ status: 'playing' });
+            }
+            if (lbWinner && lbWinner !== playerName && localStatus !== 'lost' && localStatus !== 'won') {
+                setMultiplayerState({ status: 'lost' });
+            }
+        }
+
+        if (lbBoard) {
+            const board2D = [];
+            for (let i = 0; i < 9; i++) {
+                board2D.push(lbBoard.slice(i * 9, i * 9 + 9) as number[]);
+            }
+            setRemoteBoard(board2D);
+        }
+
+        if (lbCellOwners) {
+            let ownersRecord: Record<string, string> = {};
+            if (lbCellOwners && typeof lbCellOwners.entries === 'function') {
+                // It's a Map-like object from Liveblocks
+                for (const [key, val] of lbCellOwners.entries()) {
+                    ownersRecord[key] = val;
+                }
+            } else {
+                // It's a plain object
+                ownersRecord = { ...(lbCellOwners as unknown as Record<string, string>) };
+            }
+            setCellOwners(ownersRecord);
+        }
+    }, [lbPlayers, lbStatus, lbWinner, lbBoard, lbCellOwners, uid, playerName, localStatus, setMultiplayerState, setRemoteBoard, setCellOwners]);
 
     return (
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
@@ -136,19 +257,13 @@ export const PvPArena = () => {
                     </div>
                 </div>
 
-                {/* Sync Diagnostics / Last Error */}
-                {lastSyncError && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mx-3 mb-2 px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-2 overflow-hidden"
-                    >
-                        <AlertCircle size={14} className="text-rose-500 shrink-0" />
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-[9px] font-black text-rose-400 uppercase tracking-wider">Sync Error</span>
-                            <span className="text-[10px] font-medium text-rose-600 truncate">{lastSyncError}</span>
+                {/* Turn Indicator (PvP only) */}
+                {mode === 'pvp' && currentTurn && (
+                    <div className="flex items-center justify-center w-full px-4 mb-2">
+                        <div className={`w-full text-center py-2.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-colors duration-300 ${currentTurn === uid ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-100/80 text-slate-500 border border-slate-200'}`}>
+                            {currentTurn === uid ? '🌟 Your Turn' : `${opponentName}'s Turn`}
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 <div className="scale-90 origin-center md:scale-100">
@@ -172,7 +287,7 @@ export const PvPArena = () => {
 
             {/* Game Over Overlay */}
             <AnimatePresence>
-                {(status === 'won' || status === 'lost') && (
+                {(localStatus === 'won' || localStatus === 'lost') && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -184,24 +299,24 @@ export const PvPArena = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             className="bg-white p-12 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100 relative overflow-hidden"
                         >
-                            <div className={`absolute top-0 left-0 w-full h-2 ${status === 'won' ? 'bg-gradient-to-r from-indigo-400 to-cyan-400' : 'bg-gradient-to-r from-rose-500 to-orange-500'}`} />
+                            <div className={`absolute top-0 left-0 w-full h-2 ${localStatus === 'won' ? 'bg-gradient-to-r from-indigo-400 to-cyan-400' : 'bg-gradient-to-r from-rose-500 to-orange-500'}`} />
 
-                            <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${status === 'won' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
-                                {status === 'won' ? <Trophy size={40} /> : <XCircle size={40} />}
+                            <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${localStatus === 'won' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
+                                {localStatus === 'won' ? <Trophy size={40} /> : <XCircle size={40} />}
                             </div>
 
                             <h2 className="text-4xl font-black mb-2 text-slate-800">
-                                {status === 'won' ? 'Victory!' : 'Defeat'}
+                                {localStatus === 'won' ? 'Victory!' : 'Defeat'}
                             </h2>
                             <p className="text-slate-500 font-medium mb-8">
-                                {status === 'won'
+                                {localStatus === 'won'
                                     ? `You crushed it! ${opponentName} didn't stand a chance.`
                                     : `${opponentName} solved it first. Better luck next time!`}
                             </p>
 
                             <button
                                 onClick={() => useGameStore.getState().setMultiplayerState({ mode: 'pvp', status: 'idle', roomId: null })}
-                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-95 ${status === 'won'
+                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-95 ${localStatus === 'won'
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                                     : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-300'
                                     }`}
@@ -213,5 +328,46 @@ export const PvPArena = () => {
                 )}
             </AnimatePresence>
         </div>
+    );
+};
+
+
+export const PvPArena = () => {
+    const roomId = useGameStore(state => state.roomId);
+    const difficulty = useGameStore(state => state.difficulty);
+
+    // Generate initial storage for the room creator
+    const initialStorage = useMemo(() => {
+        const { initial, solved } = generateSudoku(difficulty);
+        return {
+            board: new LiveList(initial.flat()),
+            initialBoard: new LiveList(initial.flat()),
+            solvedBoard: new LiveList(solved.flat()),
+            status: "waiting",
+            difficulty: difficulty,
+            players: new LiveMap(),
+            winner: null,
+            cellOwners: new LiveMap(),
+            currentTurn: null
+        };
+    }, [difficulty]);
+
+    if (!roomId) return null;
+
+    return (
+        <RoomProvider
+            id={roomId}
+            initialPresence={{ cursor: null, hoveredCell: null }}
+            initialStorage={initialStorage as any}
+        >
+            <ClientSideSuspense fallback={
+                <div className="h-dvh w-full flex flex-col items-center justify-center gap-4 text-indigo-600 font-medium bg-slate-50">
+                    <Loader2 size={32} className="animate-spin" />
+                    <p>Connecting to Arena...</p>
+                </div>
+            }>
+                <PvPArenaContent />
+            </ClientSideSuspense>
+        </RoomProvider>
     );
 };

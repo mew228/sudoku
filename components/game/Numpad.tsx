@@ -3,21 +3,35 @@ import { motion, PanInfo } from "framer-motion";
 import { useSound } from "@/lib/hooks/useSound";
 
 export const Numpad = () => {
-    const setCellValue = useGameStore(state => state.setCellValue);
+    const { setCellValue, mode, uid, currentTurn } = useGameStore();
+    const isOpponentTurn = mode === 'pvp' && currentTurn !== null && uid !== currentTurn;
     const { playSound } = useSound();
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-    const handleDragStart = () => {
-        // Prevent default touch actions if needed
+    const handleDragStart = (e: any) => {
+        if (isOpponentTurn) {
+            e.preventDefault();
+            return;
+        }
     };
 
-    // Helper to find the cell under the cursor/finger
-    const getCellFromPoint = (x: number, y: number) => {
-        // IMPORTANT: document.elementsFromPoint expects VIEWPORT coordinates (clientX/Y)
-        // info.point from Framer Motion is often absolute (pageX/Y)
-        // We ensure we're using viewport coordinates by subtracting scroll
-        const clientX = x - window.scrollX;
-        const clientY = y - window.scrollY;
+    // Helper to find the cell under the cursor/finger using native event
+    const getCellFromEvent = (e: MouseEvent | TouchEvent | PointerEvent) => {
+        let clientX = 0;
+        let clientY = 0;
+
+        if ('changedTouches' in e && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else if ('touches' in e && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = (e as MouseEvent).clientX;
+            clientY = (e as MouseEvent).clientY;
+        } else {
+            return null; // Fallback
+        }
 
         const elements = document.elementsFromPoint(clientX, clientY);
         for (const element of elements) {
@@ -32,9 +46,10 @@ export const Numpad = () => {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleDrag = (_: any, info: PanInfo) => {
-        const point = info.point;
-        const cell = getCellFromPoint(point.x, point.y);
+    const handleDrag = (e: any, info: PanInfo) => {
+        if (isOpponentTurn) return;
+
+        const cell = getCellFromEvent(e);
 
         const currentHover = useGameStore.getState().hoveredCell;
         if (cell?.r !== currentHover?.r || cell?.c !== currentHover?.c) {
@@ -42,9 +57,10 @@ export const Numpad = () => {
         }
     };
 
-    const handleDragEnd = (_event: any, info: PanInfo, num: number) => {
-        const point = info.point;
-        const cellCoords = getCellFromPoint(point.x, point.y);
+    const handleDragEnd = (e: any, info: PanInfo, num: number) => {
+        if (isOpponentTurn) return;
+
+        const cellCoords = getCellFromEvent(e);
         const state = useGameStore.getState();
 
         // Clear hover state
@@ -81,13 +97,14 @@ export const Numpad = () => {
                         // Prevent default touch behaviors that might interfere
                         // e.preventDefault(); // Commented out to see if it allows better selection
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.90 }}
+                    whileHover={{ scale: isOpponentTurn ? 1 : 1.05 }}
+                    whileTap={{ scale: isOpponentTurn ? 1 : 0.90 }}
                     onClick={() => {
+                        if (isOpponentTurn) return;
                         playSound('click');
                         setCellValue(num);
                     }}
-                    className="aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none"
+                    className={`aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-all duration-300 select-none touch-none ${isOpponentTurn ? 'opacity-50 grayscale cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                     style={{ touchAction: 'none' }}
                 >
                     {num}

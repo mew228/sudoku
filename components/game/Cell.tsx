@@ -42,6 +42,16 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
     // Hover state from drag and drop
     const isHovered = useGameStore(useShallow(state => state.hoveredCell?.r === r && state.hoveredCell?.c === c));
 
+    // Opponent Hover State
+    const isOpponentHovered = useGameStore(useShallow(state =>
+        state.opponentHoveredCells.some(cell => cell.r === r && cell.c === c)
+    ));
+
+    // Cell Ownership
+    const cellOwnerUid = useGameStore(useShallow(state => state.cellOwners[`${r},${c}`]));
+    const localUid = useGameStore(useShallow(state => state.uid));
+    const isOpponentCell = cellOwnerUid && localUid && cellOwnerUid !== localUid;
+
     // Notes logic - purely selector based
     const cellNotes = useGameStore(useShallow(state => {
         if (val !== 0) return [];
@@ -119,6 +129,9 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                 // Hint Golden Glow (layered on top)
                 isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20",
 
+                // Opponent Hover Highlight (Presence)
+                isOpponentHovered && !isSelected && !isError && "ring-2 ring-rose-400 bg-rose-50/50 z-20",
+
                 // Hover Highlight (Drag & Drop)
                 isHovered && !isSelected && !isError && "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-30",
 
@@ -140,7 +153,12 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className={cn("z-10", isError && "animate-shake")}
+                    className={cn(
+                        "z-10",
+                        isError && "animate-shake",
+                        !initial && !isError && (isOpponentCell ? "text-rose-500" : "text-indigo-600"),
+                        initial && "text-slate-900 font-medium",
+                    )}
                 >
                     {val}
                 </motion.span>
