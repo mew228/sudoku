@@ -24,10 +24,17 @@ export const Lobby = () => {
         setError('');
         setLoading(true);
         try {
-            // 1. Sign in the user (still using Firebase Auth for identity)
-            const user = await signInUser(name.trim());
-            // 2. Setup user profile
-            await getUserProfile(user.uid, name.trim());
+            let uidStr = useGameStore.getState().uid;
+            try {
+                // 1. Sign in the user (Firebase Auth)
+                const user = await signInUser(name.trim());
+                // 2. Setup user profile
+                await getUserProfile(user.uid, name.trim());
+                uidStr = user.uid;
+            } catch (err) {
+                console.warn("Firebase Auth blocked/failed. Using temporary local ID instead.", err);
+                if (!uidStr) uidStr = 'guest-' + Math.random().toString(36).substring(2, 10);
+            }
 
             // Generate a random 6-char Liveblocks room code
             const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -40,7 +47,7 @@ export const Lobby = () => {
             setMultiplayerState({
                 roomId: id,
                 playerId: name.trim(),
-                uid: user.uid,
+                uid: uidStr,
                 mode: 'pvp',
                 status: 'waiting'
             });
@@ -64,15 +71,22 @@ export const Lobby = () => {
         try {
             const code = roomIdInput.trim().toUpperCase();
 
-            // 1. Sign in the user
-            const user = await signInUser(name.trim());
-            // 2. Setup user profile
-            await getUserProfile(user.uid, name.trim());
+            let uidStr = useGameStore.getState().uid;
+            try {
+                // 1. Sign in the user
+                const user = await signInUser(name.trim());
+                // 2. Setup user profile
+                await getUserProfile(user.uid, name.trim());
+                uidStr = user.uid;
+            } catch (err) {
+                console.warn("Firebase Auth blocked/failed. Using temporary local ID instead.", err);
+                if (!uidStr) uidStr = 'guest-' + Math.random().toString(36).substring(2, 10);
+            }
 
             setMultiplayerState({
                 roomId: code,
                 playerId: name.trim(),
-                uid: user.uid,
+                uid: uidStr,
                 mode: 'pvp',
                 status: 'waiting' // Liveblocks RoomProvider inside PvPArena will transition this to 'playing' when enough players connect
             });
