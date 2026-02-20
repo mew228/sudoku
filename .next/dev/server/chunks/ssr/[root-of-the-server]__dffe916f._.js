@@ -430,18 +430,18 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@firebase/database/dist/node-esm/index.node.esm.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/logic/sudoku.ts [app-ssr] (ecmascript)");
 ;
+;
+;
 const getDb = ()=>{
     if (!__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"]) throw new Error("Firebase database is not initialized");
     return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"];
 };
-;
-;
-// Helper to sanitize keys for Firebase paths (no . # $ [ ])
-// Helper to sanitize keys for Firebase paths (remove special chars)
-const sanitizeKey = (key)=>key.replace(/[^a-zA-Z0-9_ -]/g, '').trim();
+const getAuth = ()=>{
+    if (!__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["auth"]) throw new Error("Firebase auth is not initialized");
+    return __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$firebase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["auth"];
+};
 /**
  * Generate a short 6-character alphanumeric room code.
- * Uses uppercase letters + digits (excludes confusable chars like O/0, I/1/L).
  */ function generateShortCode() {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     let code = '';
@@ -450,24 +450,26 @@ const sanitizeKey = (key)=>key.replace(/[^a-zA-Z0-9_ -]/g, '').trim();
     }
     return code;
 }
+/**
+ * Setup presence handling for a player in a room.
+ */ const setupPresence = (roomId, uid)=>{
+    const playerStatusRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${uid}/status`);
+    // On disconnect, mark as offline
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["onDisconnect"])(playerStatusRef).set('offline');
+};
 const createRoom = async (playerName, difficulty)=>{
     let code = '';
     let attempts = 0;
+    const user = getAuth().currentUser;
+    if (!user) throw new Error("User must be signed in to create a room");
     while(attempts < 5){
         code = generateShortCode();
-        console.log("Checking Room ID:", code);
-        try {
-            const dbRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${code}`);
-            const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(dbRef);
-            if (!snapshot.exists()) break;
-        } catch (e) {
-            console.error("Error accessing Firebase:", e);
-            throw e; // Rethrow to catch in Lobby.tsx
-        }
+        const dbRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${code}`);
+        const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(dbRef);
+        if (!snapshot.exists()) break;
         attempts++;
     }
     const { initial, solved } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["generateSudoku"])(difficulty);
-    // Deep copy for currentBoard
     const currentBoard = initial.map((row)=>[
             ...row
         ]);
@@ -479,8 +481,8 @@ const createRoom = async (playerName, difficulty)=>{
         currentBoard: currentBoard,
         solvedBoard: solved,
         players: {
-            [sanitizeKey(playerName)]: {
-                name: playerName,
+            [user.uid]: {
+                name: playerName || user.displayName || 'Player 1',
                 progress: 0,
                 mistakes: 0,
                 status: 'playing'
@@ -489,41 +491,54 @@ const createRoom = async (playerName, difficulty)=>{
         winner: null,
         createdAt: Date.now()
     });
+    setupPresence(code, user.uid);
     return code;
 };
 const joinRoom = async (roomId, playerName)=>{
+    const user = getAuth().currentUser;
+    if (!user) throw new Error("User must be signed in to join a room");
     const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
     const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(roomRef);
     if (!snapshot.exists()) {
-        throw new Error("Room not found. Check the code and try again.");
+        throw new Error("Room not found.");
     }
     const room = snapshot.val();
-    if (room.status !== 'waiting') {
+    if (room.status !== 'waiting' && !room.players[user.uid]) {
         throw new Error("This game has already started.");
     }
-    const existingPlayers = Object.keys(room.players || {});
-    // Check if the sanitized name is already present
-    const sanitizedName = sanitizeKey(playerName);
-    if (!sanitizedName) {
-        throw new Error("Name contains invalid characters. Please use letters and numbers.");
-    }
-    // Check if actual name or sanitized key is taken
-    const nameTaken = Object.values(room.players || {}).some((p)=>p.name === playerName);
-    if (nameTaken) {
-        throw new Error("That name is already taken in this room.");
-    }
-    // Add player
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${sanitizedName}`), {
-        name: playerName,
-        progress: 0,
-        mistakes: 0,
+    // Add or rejoin player
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${user.uid}`), {
+        name: playerName || user.displayName || 'Player 2',
+        progress: room.players[user.uid]?.progress || 0,
+        mistakes: room.players[user.uid]?.mistakes || 0,
         status: 'playing'
     });
     // Auto-start when 2nd player joins
-    if (existingPlayers.length >= 1) {
-        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`), {
+    const existingPlayers = Object.keys(room.players || {});
+    if (existingPlayers.length >= 1 && !room.players[user.uid]) {
+        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])(roomRef, {
             status: 'playing'
         });
+    }
+    setupPresence(roomId, user.uid);
+};
+const updateProgress = async (roomId, progress, mistakes, status)=>{
+    const user = getAuth().currentUser;
+    if (!user) return;
+    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${user.uid}`), {
+        progress,
+        mistakes,
+        status
+    });
+    if (status === 'won') {
+        const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
+        const snap = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(roomRef);
+        if (snap.val() && !snap.val().winner) {
+            await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])(roomRef, {
+                winner: user.displayName || user.uid,
+                status: 'finished'
+            });
+        }
     }
 };
 const subscribeToRoom = (roomId, callback)=>{
@@ -539,25 +554,6 @@ const subscribeToPlayers = (roomId, callback)=>{
         const data = snapshot.val();
         if (data) callback(data);
     });
-};
-const updateProgress = async (roomId, playerName, progress, mistakes, status)=>{
-    // Sanitized key
-    const sanitizedName = sanitizeKey(playerName);
-    await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/players/${sanitizedName}`), {
-        progress,
-        mistakes,
-        status
-    });
-    if (status === 'won') {
-        const roomRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}`);
-        const snap = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["get"])(roomRef);
-        if (snap.val() && !snap.val().winner) {
-            await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["update"])(roomRef, {
-                winner: playerName,
-                status: 'finished'
-            });
-        }
-    }
 };
 const updateBoardCell = async (roomId, r, c, value)=>{
     await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["set"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$database$2f$dist$2f$node$2d$esm$2f$index$2e$node$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ref"])(getDb(), `rooms/${roomId}/currentBoard/${r}/${c}`), value);
@@ -605,6 +601,7 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         mode: 'single',
         roomId: null,
         playerId: null,
+        uid: null,
         opponentProgress: 0,
         opponentName: null,
         opponentStatus: null,
@@ -642,13 +639,12 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             }),
         toggleNotesMode: ()=>{},
         setCellValue: (num)=>{
-            const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, roomId, playerId } = get();
+            const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, roomId } = get();
             if (!selectedCell || status === 'won' || status === 'lost') return;
             const { r, c } = selectedCell;
             if (initialBoard[r][c] !== __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BLANK"]) return;
-            // Notes Mode
             if (isNotesMode) {
-                const noteKey = r + "," + c + "," + num;
+                const noteKey = `${r},${c},${num}`;
                 const newNotes = new Set(notes);
                 if (newNotes.has(noteKey)) {
                     newNotes.delete(noteKey);
@@ -660,11 +656,8 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 });
                 return;
             }
-            // Check if value actually changed
             if (board[r][c] === num) return;
-            // CO-OP LOGIC:
             const isCorrect = num === solvedBoard[r][c];
-            // ALWAYS update the board first (Visual Feedback)
             const newBoard = board.map((row)=>[
                     ...row
                 ]);
@@ -676,12 +669,10 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     ])
             ];
             if (isCorrect) {
-                // --- CORRECT MOVE ---
                 set({
                     board: newBoard,
                     history: newHistory
                 });
-                // Check Win (Full AND Correct)
                 let filled = 0;
                 let allCorrect = true;
                 for(let i = 0; i < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]; i++){
@@ -696,31 +687,26 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         status: 'won'
                     });
                 }
-                // Sync to Firebase (Board + Progress)
                 if (mode === 'pvp' && roomId) {
                     (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>console.error("Board Sync Failed:", e));
                     const progress = Math.floor(filled / (__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"] * __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]) * 100);
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, playerId || "Guest", progress, mistakes, isWon ? 'won' : 'playing').catch((e)=>console.error("Progress Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, mistakes, isWon ? 'won' : 'playing').catch((e)=>console.error("Progress Sync Failed:", e));
                 }
             } else {
-                // --- WRONG MOVE ---
                 const newMistakes = mistakes + 1;
-                // Update board ANYWAY to show the red number, and increment mistakes
                 set({
                     mistakes: newMistakes,
                     board: newBoard,
                     history: newHistory
                 });
-                if (newMistakes >= maxMistakes) {
+                const isLost = newMistakes >= maxMistakes;
+                if (isLost) {
                     set({
                         status: 'lost'
                     });
                 }
-                // Sync to Firebase (Mistakes + Board update)
                 if (mode === 'pvp' && roomId) {
-                    // Sync the wrong move so partner sees it
                     (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateBoardCell"])(roomId, r, c, num).catch((e)=>console.error("Board Sync Failed:", e));
-                    // Calculate existing progress
                     let filled = 0;
                     for(let i = 0; i < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]; i++){
                         for(let j = 0; j < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]; j++){
@@ -728,10 +714,9 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         }
                     }
                     const progress = Math.floor(filled / (__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"] * __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]) * 100);
-                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, playerId || "Guest", progress, newMistakes, newMistakes >= maxMistakes ? 'lost' : 'playing').catch((e)=>console.error("Mistake Sync Failed:", e));
+                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$firebase$2f$rooms$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateProgress"])(roomId, progress, newMistakes, isLost ? 'lost' : 'playing').catch((e)=>console.error("Mistake Sync Failed:", e));
                 }
             }
-        // Removed Leaderboard logic as per user request
         },
         undo: ()=>{
             const { history } = get();
@@ -743,7 +728,6 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             });
         },
         resetGame: ()=>{
-            // restart with same board? or new? usually "Restart" means same board cleared.
             const { initialBoard } = get();
             set({
                 board: initialBoard.map((row)=>[
@@ -774,7 +758,6 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     ...row
                 ]);
             newBoard[hint.r][hint.c] = hint.value;
-            // Check win condition after hint
             let isWon = true;
             for(let i = 0; i < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]; i++){
                 for(let j = 0; j < __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$logic$2f$sudoku$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GRID_SIZE"]; j++){
@@ -795,7 +778,6 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 lastHint: hint,
                 status: isWon ? 'won' : status
             });
-            // Auto-clear the toast after 3 seconds
             setTimeout(()=>{
                 if (get().lastHint === hint) {
                     set({
@@ -2461,7 +2443,7 @@ function Home() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$HintToast$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["HintToast"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 46,
+                lineNumber: 45,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2475,7 +2457,7 @@ function Home() {
                                 size: 18
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 54,
+                                lineNumber: 53,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2483,13 +2465,13 @@ function Home() {
                                 children: "Single"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 55,
+                                lineNumber: 54,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 50,
+                        lineNumber: 49,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2503,7 +2485,7 @@ function Home() {
                                 size: 18
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 61,
+                                lineNumber: 60,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2511,29 +2493,29 @@ function Home() {
                                 children: "PvP"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 62,
+                                lineNumber: 61,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 57,
+                        lineNumber: 56,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 49,
+                lineNumber: 48,
                 columnNumber: 7
             }, this),
             mode === 'pvp' ? // PvP Mode: Show Lobby or Arena
             status === 'idle' || status === 'waiting' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$layout$2f$Lobby$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Lobby"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 69,
+                lineNumber: 68,
                 columnNumber: 11
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$PvPArena$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PvPArena"], {}, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 71,
+                lineNumber: 70,
                 columnNumber: 11
             }, this) : // Single Player Mode
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2558,30 +2540,30 @@ function Home() {
                                                 children: diff
                                             }, diff, false, {
                                                 fileName: "[project]/app/page.tsx",
-                                                lineNumber: 83,
+                                                lineNumber: 82,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 81,
+                                        lineNumber: 80,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "text-2xl sm:text-3xl font-bold text-slate-800 font-mono",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Timer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Timer"], {}, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 93,
+                                            lineNumber: 92,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 92,
+                                        lineNumber: 91,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 80,
+                                lineNumber: 79,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2590,23 +2572,23 @@ function Home() {
                                     className: "h-full w-full max-w-full aspect-square flex items-center justify-center",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Board$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Board"], {}, void 0, false, {
                                         fileName: "[project]/app/page.tsx",
-                                        lineNumber: 101,
+                                        lineNumber: 100,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 100,
+                                    lineNumber: 99,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 98,
+                                lineNumber: 97,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 78,
+                        lineNumber: 77,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2622,7 +2604,7 @@ function Home() {
                                             children: "Mistakes"
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 112,
+                                            lineNumber: 111,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2630,42 +2612,42 @@ function Home() {
                                             children: status === 'playing' ? `${mistakes}/3` : '-/-'
                                         }, void 0, false, {
                                             fileName: "[project]/app/page.tsx",
-                                            lineNumber: 113,
+                                            lineNumber: 112,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 111,
+                                    lineNumber: 110,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 110,
+                                lineNumber: 109,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "scale-90 origin-center md:scale-100",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$GameControls$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GameControls"], {}, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 121,
+                                    lineNumber: 120,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 120,
+                                lineNumber: 119,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "w-full",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$game$2f$Numpad$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Numpad"], {}, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 126,
+                                    lineNumber: 125,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 125,
+                                lineNumber: 124,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2674,13 +2656,13 @@ function Home() {
                                 children: status === 'playing' ? 'Restart' : 'New Game'
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 130,
+                                lineNumber: 129,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 107,
+                        lineNumber: 106,
                         columnNumber: 11
                     }, this),
                     (status === 'won' || status === 'lost') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2693,7 +2675,7 @@ function Home() {
                                     children: status === 'won' ? 'Solved!' : 'Failed'
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 142,
+                                    lineNumber: 141,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2701,7 +2683,7 @@ function Home() {
                                     children: status === 'won' ? `Congratulations! You've mastered the ${difficulty} board.` : "Don't give up. The numbers are waiting for you."
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 145,
+                                    lineNumber: 144,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2710,30 +2692,30 @@ function Home() {
                                     children: "Play Again"
                                 }, void 0, false, {
                                     fileName: "[project]/app/page.tsx",
-                                    lineNumber: 150,
+                                    lineNumber: 149,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/page.tsx",
-                            lineNumber: 141,
+                            lineNumber: 140,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 140,
+                        lineNumber: 139,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 75,
+                lineNumber: 74,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 43,
+        lineNumber: 42,
         columnNumber: 5
     }, this);
 }

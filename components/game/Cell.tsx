@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useGameStore } from '@/lib/store';
 import { useShallow } from 'zustand/react/shallow';
+import { useSound } from '@/lib/hooks/useSound';
 
 interface CellProps {
     r: number;
@@ -52,8 +53,27 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
     }));
 
     const selectCell = useGameStore(state => state.selectCell);
+    const { playSound } = useSound();
 
-    const handleClick = () => selectCell(r, c);
+    const handleClick = () => {
+        playSound('click');
+        selectCell(r, c);
+    };
+
+    // Subscribing to board value changes for sound feedback
+    useEffect(() => {
+        if (val === 0 || initial) return;
+
+        const solvedVal = useGameStore.getState().solvedBoard[r][c];
+        if (val === solvedVal) {
+            playSound('correct');
+        } else {
+            playSound('wrong');
+            if (typeof window !== 'undefined' && window.navigator.vibrate) {
+                window.navigator.vibrate([50, 50, 50]);
+            }
+        }
+    }, [val, r, c, initial, playSound]);
 
     // HTML5 DnD handlers removed in favor of Framer Motion gesture handling in Numpad.tsx
 

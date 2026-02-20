@@ -9,8 +9,8 @@ import { Lobby } from "@/components/layout/Lobby";
 import { PvPArena } from "@/components/game/PvPArena";
 import { useGameStore } from "@/lib/store";
 import { useEffect } from "react";
-import { Users, User } from 'lucide-react';
-import { AnimatePresence, motion } from "framer-motion";
+import { Users, User, Swords, Trophy, XCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   const startGame = useGameStore(state => state.startGame);
@@ -49,17 +49,24 @@ export default function Home() {
       <div className="absolute top-2 left-2 lg:top-4 lg:left-4 flex gap-2 z-50 scale-75 lg:scale-100 origin-top-left">
         <button
           onClick={() => startGame('Medium', 'single')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors border ${mode === 'single' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200 shadow-sm'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'single' ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-slate-300'}`}
         >
-          <User size={18} />
-          <span className="hidden sm:inline font-medium">Single</span>
+          <User size={16} />
+          <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">Single</span>
+        </button>
+        <button
+          onClick={() => startGame('Medium', 'bot')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'bot' ? 'bg-cyan-600 text-white border-cyan-600 shadow-lg shadow-cyan-100' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-cyan-200 hover:text-cyan-600'}`}
+        >
+          <Swords size={16} />
+          <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">AI Bot</span>
         </button>
         <button
           onClick={() => setMultiplayerState({ mode: 'pvp', status: 'idle' })}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors border ${mode === 'pvp' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 shadow-sm'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'pvp' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-indigo-200 hover:text-indigo-600'}`}
         >
-          <Users size={18} />
-          <span className="hidden sm:inline font-medium">PvP</span>
+          <Users size={16} />
+          <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">PvP</span>
         </button>
       </div>
 
@@ -135,27 +142,49 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Game Over / Win Overlay */}
-          {(status === 'won' || status === 'lost') && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-              <div className="bg-white p-12 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100">
-                <h2 className={`text-5xl font-black mb-6 ${status === 'won' ? 'text-indigo-600' : 'text-rose-500'}`}>
-                  {status === 'won' ? 'Solved!' : 'Failed'}
-                </h2>
-                <p className="text-slate-500 text-lg mb-10 leading-relaxed">
-                  {status === 'won'
-                    ? `Congratulations! You've mastered the ${difficulty} board.`
-                    : "Don't give up. The numbers are waiting for you."}
-                </p>
-                <button
-                  onClick={() => startGame(difficulty, mode)}
-                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-xl hover:bg-indigo-700 hover:scale-[1.02] transition-all shadow-xl shadow-indigo-200"
+          {/* Game Over / Win Overlay - Premium Upgraded */}
+          <AnimatePresence>
+            {(status === 'won' || status === 'lost') && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  className="bg-white p-12 rounded-3xl shadow-2xl max-w-md w-full text-center border border-slate-100 relative overflow-hidden"
                 >
-                  Play Again
-                </button>
-              </div>
-            </div>
-          )}
+                  {/* Background decoration */}
+                  <div className={`absolute top-0 left-0 w-full h-2 ${status === 'won' ? 'bg-gradient-to-r from-indigo-400 to-cyan-400' : 'bg-gradient-to-r from-rose-500 to-orange-500'}`} />
+
+                  <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${status === 'won' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-500'}`}>
+                    {status === 'won' ? <Trophy size={40} /> : <XCircle size={40} />}
+                  </div>
+
+                  <h2 className={`text-4xl font-black mb-2 text-slate-800`}>
+                    {status === 'won' ? 'Victory!' : 'Failed'}
+                  </h2>
+                  <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                    {status === 'won'
+                      ? `Impressive! You've mastered the ${difficulty} board.`
+                      : "The numbers got the better of you this time. Ready to try again?"}
+                  </p>
+
+                  <button
+                    onClick={() => startGame(difficulty, mode)}
+                    className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-95 ${status === 'won'
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                      : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-300'
+                      }`}
+                  >
+                    Play Again
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </main>

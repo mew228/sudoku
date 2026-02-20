@@ -52,13 +52,16 @@ export const PvPArena = () => {
             }
         });
 
-        // Subscribe to SHARED BOARD (Co-op)
+        // Subscribe to PERSONAL BOARD (for persistence/racing)
         import('@/lib/firebase/rooms').then(({ subscribeToBoard }) => {
-            subscribeToBoard(roomId, (remoteBoard) => {
-                if (remoteBoard) {
-                    useGameStore.getState().setRemoteBoard(remoteBoard);
-                }
-            });
+            const currentUid = useGameStore.getState().uid;
+            if (roomId && currentUid) {
+                subscribeToBoard(roomId, currentUid, (remoteBoard) => {
+                    if (remoteBoard) {
+                        useGameStore.getState().setRemoteBoard(remoteBoard);
+                    }
+                });
+            }
         });
 
         return () => {
@@ -74,21 +77,29 @@ export const PvPArena = () => {
 
                 {/* Header - PvP Specific - Compact & Unified */}
                 <div className="flex w-full justify-between items-center text-slate-500 font-medium px-2 z-10 shrink-0 gap-2">
-                    {/* Status Pill with Opponent Info */}
-                    <div className="flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1.5 rounded-full border border-slate-200 shadow-sm grow-0 shrink overflow-hidden max-w-[70%]">
-                        <div className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600">
-                            <Users size={14} />
+                    {/* Status Pill with Opponent Info - Redesigned for clarity */}
+                    <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 shadow-sm grow-0 shrink overflow-hidden max-w-[70%] transition-all hover:border-indigo-200">
+                        <div className="relative shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 border border-indigo-100">
+                            <Users size={16} />
+                            {/* Connection Pulse Indicator */}
+                            <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                         </div>
-                        <div className="flex flex-col leading-none truncate">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VS</span>
-                            <div className="flex items-center gap-1.5 truncate">
-                                <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">{opponentName || 'Opponent'}</span>
-                                <span className={`text-[10px] sm:text-xs font-mono font-bold ${opponentProgress > 50 ? 'text-indigo-600' : 'text-slate-400'}`}>
+
+                        <div className="flex items-center gap-3 min-w-0 pr-1">
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">Versus</span>
+                                <span className="text-sm font-bold text-slate-800 truncate leading-none mb-0.5">
+                                    {opponentName || 'Opponent'}
+                                </span>
+                            </div>
+
+                            <div className="flex flex-col items-end shrink-0 pl-2 border-l border-slate-100">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] mb-0.5">Progress</span>
+                                <span className={`text-sm font-mono font-black tabular-nums leading-none ${opponentProgress > 50 ? 'text-indigo-600' : 'text-slate-600'}`}>
                                     {opponentProgress}%
                                 </span>
                             </div>
                         </div>
-                        <div className={`shrink-0 w-2 h-2 rounded-full ml-1 ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={isConnected ? "Live Sync Active" : "Connecting..."} />
                     </div>
 
                     {/* Timer */}

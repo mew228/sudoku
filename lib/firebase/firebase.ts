@@ -19,17 +19,10 @@ let auth: Auth | undefined;
 
 try {
     if (firebaseConfig.apiKey) {
-        console.log("Initializing Firebase with config:", {
-            ...firebaseConfig,
-            apiKey: "HIDDEN" // Hide sensitive key in logs
-        });
         app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         db = getDatabase(app);
         auth = getAuth(app);
-        console.log("Firebase initialized successfully. DB URL:", db.app.options.databaseURL);
     } else {
-        // During build or if not configured, these might be accessed.
-        // If accessed, they will throw or be undefined.
         console.warn("Firebase config missing. Firebase features will not work.");
     }
 } catch (e) {

@@ -1,5 +1,6 @@
 import { useGameStore } from "@/lib/store";
 import { motion, PanInfo } from "framer-motion";
+import { useSound } from "@/lib/hooks/useSound";
 
 export const Numpad = () => {
     const setCellValue = useGameStore(state => state.setCellValue);
@@ -76,7 +77,10 @@ export const Numpad = () => {
                     }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.90 }}
-                    onClick={() => setCellValue(num)} // Keep click for accessibility/speed
+                    onClick={() => {
+                        useSound().playSound('click');
+                        setCellValue(num);
+                    }} // Keep click for accessibility/speed
                     className="aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none"
                     style={{ touchAction: 'none' }} // Hint for touch devices
                 >

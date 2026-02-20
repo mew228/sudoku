@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "sudoku-fb1a9"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

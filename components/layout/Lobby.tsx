@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { createRoom, joinRoom, subscribeToRoom } from '@/lib/firebase/rooms';
+import { signInUser } from '@/lib/firebase/auth';
+import { getUserProfile } from '@/lib/firebase/users';
 import { db } from '@/lib/firebase/firebase';
 import { ref, get } from 'firebase/database';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,9 +27,20 @@ export const Lobby = () => {
         setError('');
         setLoading(true);
         try {
+            // 1. Sign in the user
+            const user = await signInUser(name.trim());
+            // 2. Setup user profile
+            await getUserProfile(user.uid, name.trim());
+
             const id = await createRoom(name.trim(), 'Medium');
             setCreatedRoomId(id);
-            setMultiplayerState({ roomId: id, playerId: name.trim(), mode: 'pvp', status: 'waiting' });
+            setMultiplayerState({
+                roomId: id,
+                playerId: name.trim(),
+                uid: user.uid,
+                mode: 'pvp',
+                status: 'waiting'
+            });
 
             // Listen for opponent joining
             const unsubscribe = subscribeToRoom(id, (room) => {
@@ -43,7 +56,7 @@ export const Lobby = () => {
                     if (opponent) {
                         setMultiplayerState({ opponentName: opponent.name });
                     }
-                    unsubscribe(); // Stop listening from Lobby once game starts
+                    unsubscribe();
                 }
             });
         } catch (error: unknown) {
@@ -64,8 +77,19 @@ export const Lobby = () => {
         setLoading(true);
         try {
             const code = roomIdInput.trim().toUpperCase();
+
+            // 1. Sign in the user
+            const user = await signInUser(name.trim());
+            // 2. Setup user profile
+            await getUserProfile(user.uid, name.trim());
+
             await joinRoom(code, name.trim());
-            setMultiplayerState({ roomId: code, playerId: name.trim(), mode: 'pvp' });
+            setMultiplayerState({
+                roomId: code,
+                playerId: name.trim(),
+                uid: user.uid,
+                mode: 'pvp'
+            });
 
             const unsubscribe = subscribeToRoom(code, (room) => {
                 if (room.status === 'playing') {

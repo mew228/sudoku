@@ -110,3 +110,152 @@ Import traces:
 [00:45:09.223] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
 [00:45:15.792] Browser LOG     Checking Room ID: RWMYG8
 [00:47:04.620] Server  LOG     ✓ Compiled in 61ms
+[00:48:33.492] Server  LOG     ✓ Compiled in 56ms
+[03:30:58.479] Server  LOG     Initializing Firebase with config: {}
+[03:30:58.489] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[03:30:58.576] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:30:58.576] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[03:30:58.576] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[03:31:04.569] Browser LOG     Checking Room ID: D68NPN
+[03:31:11.059] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:31:11.059] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[03:31:11.059] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[03:31:20.227] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:31:20.227] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[03:31:20.227] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[03:36:15.691] Server  LOG     ✓ Compiled in 200ms
+[03:36:52.196] Server  LOG     ✓ Compiled in 156ms
+[03:36:52.773] Browser ERROR   ./lib/store.ts:192:15
+Parsing ecmascript source code failed
+  190 |
+  191 |     undo: () => {
+> 192 |         const { history } = get();
+      |               ^
+  193 |         if (history.length === 0) return;
+  194 |         const previousBoard = history[history.length - 1];
+  195 |         set({
+
+Expected ';', got '{'
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[03:36:52.773] Browser ERROR   ./lib/store.ts:192:15
+Parsing ecmascript source code failed
+  190 |
+  191 |     undo: () => {
+> 192 |         const { history } = get();
+      |               ^
+  193 |         if (history.length === 0) return;
+  194 |         const previousBoard = history[history.length - 1];
+  195 |         set({
+
+Expected ';', got '{'
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[03:37:23.778] Browser ERROR   ./lib/store.ts:192:15
+Parsing ecmascript source code failed
+  190 |
+  191 |     undo: () => {
+> 192 |         const { history } = get();
+      |               ^
+  193 |         if (history.length === 0) return;
+  194 |         const previousBoard = history[history.length - 1];
+  195 |         set({
+
+Expected ';', got '{'
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[03:37:23.779] Browser ERROR   ./lib/store.ts:192:15
+Parsing ecmascript source code failed
+  190 |
+  191 |     undo: () => {
+> 192 |         const { history } = get();
+      |               ^
+  193 |         if (history.length === 0) return;
+  194 |         const previousBoard = history[history.length - 1];
+  195 |         set({
+
+Expected ';', got '{'
+
+Import traces:
+  Client Component Browser:
+    ./lib/store.ts [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/store.ts [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+[03:37:42.175] Server  LOG     ✓ Compiled in 117ms
+[03:38:13.023] Server  LOG     ✓ Compiled in 84ms
+[03:38:51.150] Server  LOG     Initializing Firebase with config: {}
+[03:38:51.158] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[03:38:51.255] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:38:51.255] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[03:38:51.255] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[03:39:05.184] Server  LOG     ✓ Compiled in 107ms
+[03:39:56.733] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:40:09.958] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:40:09.958] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:44:21.722] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:44:27.024] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:44:27.024] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:46:21.177] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:46:26.012] Browser ERROR   Auth error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:46:26.012] Browser ERROR   Lobby Create Error: {"code":"auth/requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signup-are-blocked.","customData":{},"name":"FirebaseError"}
+[03:52:15.027] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:52:23.289] Browser ERROR   Lobby Create Error: {}
+[03:53:18.945] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:54:16.117] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[04:01:15.952] Server  LOG     ✓ Compiled in 105ms
+[04:06:56.233] Server  LOG     ✓ Compiled in 62ms
+[04:07:06.771] Server  LOG     ✓ Compiled in 61ms
+[04:07:14.283] Server  LOG     ✓ Compiled in 61ms
+[04:07:30.220] Server  LOG     ✓ Compiled in 63ms
+[04:07:42.291] Server  LOG     ✓ Compiled in 76ms
+[04:07:52.243] Server  LOG     ✓ Compiled in 65ms
+[04:11:37.898] Server  LOG     ✓ Compiled in 111ms
+[04:11:38.782] Browser ERROR   uncaughtError: ReferenceError: Swords is not defined
+[04:11:39.414] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[04:11:39.856] Server  ERROR   ⨯ ReferenceError: Swords is not defined
+[04:11:39.881] Server  LOG     ✓ Compiled in 98ms
+[04:11:39.903] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[04:12:09.077] Server  LOG     ✓ Compiled in 105ms
+[04:12:11.142] Server  LOG     ✓ Compiled in 64ms
+[04:12:11.783] Browser ERROR   uncaughtError: ReferenceError: useSound is not defined
+[04:12:12.660] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[04:12:13.169] Server  LOG     ✓ Compiled in 131ms
+[04:12:13.213] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[04:12:13.213] Browser ERROR   uncaughtError: ReferenceError: Swords is not defined
+[04:12:14.350] Server  LOG     ✓ Compiled in 62ms
+[04:12:15.849] Server  LOG     ✓ Compiled in 70ms
+[04:12:38.160] Server  LOG     ✓ Compiled in 61ms
+[04:12:40.464] Server  LOG     ✓ Compiled in 62ms
+[04:13:13.157] Server  LOG     ✓ Compiled in 69ms

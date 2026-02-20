@@ -1,38 +1,38 @@
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
+import { ref, set, onValue, update, get, onDisconnect, remove } from "firebase/database";
+import { generateSudoku, Difficulty } from "../logic/sudoku";
 
 const getDb = () => {
     if (!db) throw new Error("Firebase database is not initialized");
     return db;
 };
-import { ref, set, onValue, update, get } from "firebase/database";
-import { generateSudoku, Difficulty } from "../logic/sudoku";
+
+const getAuth = () => {
+    if (!auth) throw new Error("Firebase auth is not initialized");
+    return auth;
+};
 
 export interface Room {
     id: string;
     status: 'waiting' | 'playing' | 'finished';
     difficulty: Difficulty;
-    initialBoard: number[][]; // Where we started
-    currentBoard: number[][]; // Shared real-time board
+    initialBoard: number[][];
+    currentBoard: number[][];
     solvedBoard: number[][];
     players: {
         [uid: string]: {
             name: string;
-            progress: number; // cells filled correctly
+            progress: number;
             mistakes: number;
-            status: 'playing' | 'won' | 'lost';
+            status: 'playing' | 'won' | 'lost' | 'offline';
         }
     };
     winner: string | null;
     createdAt: number;
 }
 
-// Helper to sanitize keys for Firebase paths (no . # $ [ ])
-// Helper to sanitize keys for Firebase paths (remove special chars)
-const sanitizeKey = (key: string) => key.replace(/[^a-zA-Z0-9_ -]/g, '').trim();
-
 /**
  * Generate a short 6-character alphanumeric room code.
- * Uses uppercase letters + digits (excludes confusable chars like O/0, I/1/L).
  */
 function generateShortCode(): string {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -44,30 +44,35 @@ function generateShortCode(): string {
 }
 
 /**
- * Create a new PvP room with a short code.
- * Tries up to 5 times to avoid code collisions.
+ * Setup presence handling for a player in a room.
+ */
+const setupPresence = (roomId: string, uid: string) => {
+    const playerStatusRef = ref(getDb(), `rooms/${roomId}/players/${uid}/status`);
+    // On disconnect, mark as offline
+    onDisconnect(playerStatusRef).set('offline');
+};
+
+/**
+ * Create a new PvP room.
  */
 export const createRoom = async (playerName: string, difficulty: Difficulty): Promise<string> => {
     let code = '';
     let attempts = 0;
+    const user = getAuth().currentUser;
+    if (!user) throw new Error("User must be signed in to create a room");
 
     while (attempts < 5) {
         code = generateShortCode();
-        console.log("Checking Room ID:", code);
-        try {
-            const dbRef = ref(getDb(), `rooms/${code}`);
-            const snapshot = await get(dbRef);
-            if (!snapshot.exists()) break;
-        } catch (e) {
-            console.error("Error accessing Firebase:", e);
-            throw e; // Rethrow to catch in Lobby.tsx
-        }
+        const dbRef = ref(getDb(), `rooms/${code}`);
+        const snapshot = await get(dbRef);
+        if (!snapshot.exists()) break;
         attempts++;
     }
 
-    const { initial, solved } = generateSudoku(difficulty);
+    // Trigger cleanup occasionally when creating new rooms
+    cleanupOldRooms().catch(e => console.error("Cleanup error:", e));
 
-    // Deep copy for currentBoard
+    const { initial, solved } = generateSudoku(difficulty);
     const currentBoard = initial.map(row => [...row]);
 
     await set(ref(getDb(), `rooms/${code}`), {
@@ -75,76 +80,94 @@ export const createRoom = async (playerName: string, difficulty: Difficulty): Pr
         status: 'waiting',
         difficulty,
         initialBoard: initial,
-        currentBoard: currentBoard, // Set shared board
         solvedBoard: solved,
         players: {
-            [sanitizeKey(playerName)]: {
-                name: playerName,
+            [user.uid]: {
+                name: playerName || user.displayName || 'Player 1',
                 progress: 0,
                 mistakes: 0,
-                status: 'playing'
+                status: 'playing',
+                board: currentBoard
             }
         },
         winner: null,
         createdAt: Date.now()
     });
 
+    setupPresence(code, user.uid);
     return code;
 };
 
 /**
- * Join an existing room by code.
- * Validates room exists and is still waiting. Auto-starts game when 2nd player joins.
+ * Join an existing room.
  */
 export const joinRoom = async (roomId: string, playerName: string) => {
+    const user = getAuth().currentUser;
+    if (!user) throw new Error("User must be signed in to join a room");
+
     const roomRef = ref(getDb(), `rooms/${roomId}`);
     const snapshot = await get(roomRef);
 
     if (!snapshot.exists()) {
-        throw new Error("Room not found. Check the code and try again.");
+        throw new Error("Room not found.");
     }
 
     const room = snapshot.val();
-    if (room.status !== 'waiting') {
+    if (room.status !== 'waiting' && !room.players[user.uid]) {
         throw new Error("This game has already started.");
     }
 
-    const existingPlayers = Object.keys(room.players || {});
-    // Check if the sanitized name is already present
-    const sanitizedName = sanitizeKey(playerName);
-    if (!sanitizedName) {
-        throw new Error("Name contains invalid characters. Please use letters and numbers.");
-    }
-
-    // Check if actual name or sanitized key is taken
-    const nameTaken = Object.values(room.players || {}).some((p: any) => p.name === playerName);
-    if (nameTaken) {
-        throw new Error("That name is already taken in this room.");
-    }
-
-    // Add player
-    await update(ref(getDb(), `rooms/${roomId}/players/${sanitizedName}`), {
-        name: playerName,
-        progress: 0,
-        mistakes: 0,
-        status: 'playing'
+    // Add or rejoin player
+    await update(ref(getDb(), `rooms/${roomId}/players/${user.uid}`), {
+        name: playerName || user.displayName || 'Player 2',
+        progress: room.players[user.uid]?.progress || 0,
+        mistakes: room.players[user.uid]?.mistakes || 0,
+        status: 'playing',
+        board: room.players[user.uid]?.board || room.initialBoard.map((row: any) => [...row])
     });
 
     // Auto-start when 2nd player joins
-    if (existingPlayers.length >= 1) {
-        await update(ref(getDb(), `rooms/${roomId}`), {
-            status: 'playing'
-        });
+    const existingPlayers = Object.keys(room.players || {});
+    if (existingPlayers.length >= 1 && !room.players[user.uid]) {
+        await update(roomRef, { status: 'playing' });
+    }
+
+    setupPresence(roomId, user.uid);
+};
+
+/**
+ * Update player progress.
+ */
+export const updateProgress = async (
+    roomId: string,
+    progress: number,
+    mistakes: number,
+    status: 'playing' | 'won' | 'lost'
+) => {
+    const user = getAuth().currentUser;
+    if (!user) return;
+
+    await update(ref(getDb(), `rooms/${roomId}/players/${user.uid}`), {
+        progress,
+        mistakes,
+        status
+    });
+
+    if (status === 'won') {
+        const roomRef = ref(getDb(), `rooms/${roomId}`);
+        const snap = await get(roomRef);
+        const data = snap.val();
+        if (data && !data.winner) {
+            await update(roomRef, {
+                winner: user.displayName || user.uid,
+                status: 'finished'
+            });
+        }
     }
 };
 
 /**
- * Subscribe to real-time room updates.
- * Returns an unsubscribe function.
- */
-/**
- * Subscribe to real-time room updates.
- * Returns an unsubscribe function.
+ * Real-time subscriptions
  */
 export const subscribeToRoom = (roomId: string, callback: (room: Room) => void) => {
     const roomRef = ref(getDb(), `rooms/${roomId}`);
@@ -154,10 +177,6 @@ export const subscribeToRoom = (roomId: string, callback: (room: Room) => void) 
     });
 };
 
-/**
- * Optimized subscription for gameplay - only listens to player changes.
- * drastic bandwidth reduction compared to full room subscription.
- */
 export const subscribeToPlayers = (roomId: string, callback: (players: Room['players']) => void) => {
     const playersRef = ref(getDb(), `rooms/${roomId}/players`);
     return onValue(playersRef, (snapshot) => {
@@ -166,49 +185,46 @@ export const subscribeToPlayers = (roomId: string, callback: (players: Room['pla
     });
 };
 
-/**
- * Update player progress in a room.
- */
-export const updateProgress = async (
-    roomId: string,
-    playerName: string,
-    progress: number,
-    mistakes: number,
-    status: 'playing' | 'won' | 'lost'
-) => {
-    // Sanitized key
-    const sanitizedName = sanitizeKey(playerName);
-    await update(ref(getDb(), `rooms/${roomId}/players/${sanitizedName}`), {
-        progress,
-        mistakes,
-        status
-    });
-
-    if (status === 'won') {
-        const roomRef = ref(getDb(), `rooms/${roomId}`);
-        const snap = await get(roomRef);
-        if (snap.val() && !snap.val().winner) {
-            await update(roomRef, { winner: playerName, status: 'finished' });
-        }
-    }
-};
-
-
-/**
- * Update a single cell in the shared board (Co-op mode).
- */
 export const updateBoardCell = async (roomId: string, r: number, c: number, value: number) => {
-    await set(ref(getDb(), `rooms/${roomId}/currentBoard/${r}/${c}`), value);
+    const user = getAuth().currentUser;
+    if (!user) return;
+    await set(ref(getDb(), `rooms/${roomId}/players/${user.uid}/board/${r}/${c}`), value);
 };
 
-/**
- * Subscribe to the shared board state (Co-op mode).
- */
-export const subscribeToBoard = (roomId: string, callback: (board: number[][]) => void) => {
-    const boardRef = ref(getDb(), `rooms/${roomId}/currentBoard`);
+export const subscribeToBoard = (roomId: string, uid: string, callback: (board: number[][]) => void) => {
+    const boardRef = ref(getDb(), `rooms/${roomId}/players/${uid}/board`);
     return onValue(boardRef, (snapshot) => {
         const data = snapshot.val();
         if (data) callback(data);
     });
+};
+
+/**
+ * Cleanup rooms older than 24 hours.
+ */
+export const cleanupOldRooms = async () => {
+    try {
+        const roomsRef = ref(getDb(), 'rooms');
+        const snapshot = await get(roomsRef);
+        if (!snapshot.exists()) return;
+
+        const now = Date.now();
+        const cutoff = 24 * 60 * 60 * 1000; // 24 hours
+        const updates: { [key: string]: null } = {};
+
+        snapshot.forEach((child) => {
+            const room = child.val();
+            if (room.createdAt && (now - room.createdAt > cutoff)) {
+                updates[child.key as string] = null;
+            }
+        });
+
+        if (Object.keys(updates).length > 0) {
+            await update(roomsRef, updates);
+            console.log(`Cleaned up ${Object.keys(updates).length} old rooms.`);
+        }
+    } catch (e) {
+        console.error("Cleanup failed:", e);
+    }
 };
 

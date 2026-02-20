@@ -1,16 +1,37 @@
 {
   "rules": {
     "rooms": {
-      ".read": true,
-      ".write": true
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('status').val() !== 'finished')",
+        "players": {
+          "$playerId": {
+            ".write": "auth != null && auth.uid === $playerId"
+          }
+        },
+        "currentBoard": {
+          ".write": "auth != null && (data.parent().child('players').child(auth.uid).exists() || data.parent().child('players').child(auth.token.name).exists())"
+        },
+        "solvedBoard": {
+          ".write": "false"
+        }
+      }
     },
     "leaderboard": {
       ".read": true,
-      ".write": true,
       "$difficulty": {
         ".indexOn": [
           "time"
-        ]
+        ],
+        "$scoreId": {
+          ".write": "auth != null && !data.exists() && newData.hasChildren(['name', 'time', 'difficulty'])"
+        }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { generateSudoku, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
 import { getSmartHint, HintResult } from './logic/hints';
 import { updateProgress, updateBoardCell } from './firebase/rooms';
+import { updateUserStats, UserStats } from './firebase/users';
 
 interface GameState {
     board: number[][];
@@ -25,6 +26,7 @@ interface GameState {
     mode: 'single' | 'pvp' | 'bot';
     roomId: string | null;
     playerId: string | null;
+    uid: string | null;
     opponentProgress: number; // 0-100
     opponentName: string | null;
     opponentStatus: 'playing' | 'won' | 'lost' | 'waiting' | null;
@@ -66,18 +68,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     hintsRemaining: 3,
     lastHint: null,
     hoveredCell: null,
-    highlightedNumber: null, // Added this based on the provided snippet
+    highlightedNumber: null,
 
     mode: 'single',
     roomId: null,
     playerId: null,
+    uid: null,
     opponentProgress: 0,
     opponentName: null,
     opponentStatus: null,
 
-    setRemoteBoard: (board) => set({ board }),
+    setRemoteBoard: (board: number[][]) => set({ board }),
 
-    startGame: (difficulty, mode = 'single') => {
+    startGame: (difficulty: Difficulty, mode: 'single' | 'pvp' | 'bot' = 'single') => {
         const { initial, solved } = generateSudoku(difficulty);
         set({
             board: initial.map(row => [...row]),
@@ -94,25 +97,63 @@ export const useGameStore = create<GameState>((set, get) => ({
             lastHint: null,
             mode
         });
+
+        // Handle Bot Mode
+        if (mode === 'bot') {
+            const botInterval = setInterval(() => {
+                const { status, board, solvedBoard, mistakes, roomId, difficulty } = useGameStore.getState();
+                if (status !== 'playing') {
+                    clearInterval(botInterval);
+                    return;
+                }
+
+                // Bot logic: find a random empty cell and fill it
+                const emptyCells = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (board[r][c] === 0) emptyCells.push({ r, c });
+                    }
+                }
+
+                if (emptyCells.length > 0) {
+                    const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    const correctVal = solvedBoard[r][c];
+
+                    // Simple bot: always gets it right for now, but takes time
+                    // We simulate progress for the "opponent" (the bot)
+                    const totalCells = 81;
+                    const filledCells = totalCells - emptyCells.length + 1;
+                    const progress = Math.floor((filledCells / totalCells) * 100);
+
+                    set({
+                        opponentProgress: progress,
+                        opponentName: 'AI Bot'
+                    });
+
+                    if (progress >= 100) {
+                        set({ status: 'lost', opponentStatus: 'won' });
+                    }
+                }
+            }, 5000 + (Math.random() * 5000)); // Bot solves a cell every 5-10 seconds
+        }
     },
 
-    setMultiplayerState: (state) => set(state),
+    setMultiplayerState: (state: Partial<GameState>) => set(state),
 
-    selectCell: (r, c) => set({ selectedCell: { r, c } }),
+    selectCell: (r: number, c: number) => set({ selectedCell: { r, c } }),
 
-    toggleNotesMode: () => { }, // Disabled for now as per user request (empty function)
+    toggleNotesMode: () => set(state => ({ isNotesMode: !state.isNotesMode })),
 
-    setCellValue: (num) => {
-        const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, roomId, playerId } = get();
+    setCellValue: (num: number) => {
+        const { board, selectedCell, initialBoard, solvedBoard, isNotesMode, notes, mistakes, maxMistakes, history, status, mode, roomId } = get();
 
         if (!selectedCell || status === 'won' || status === 'lost') return;
         const { r, c } = selectedCell;
 
         if (initialBoard[r][c] !== BLANK) return;
 
-        // Notes Mode
         if (isNotesMode) {
-            const noteKey = r + "," + c + "," + num;
+            const noteKey = `${r},${c},${num}`;
             const newNotes = new Set(notes);
             if (newNotes.has(noteKey)) {
                 newNotes.delete(noteKey);
@@ -123,22 +164,16 @@ export const useGameStore = create<GameState>((set, get) => ({
             return;
         }
 
-        // Check if value actually changed
         if (board[r][c] === num) return;
 
-        // CO-OP LOGIC:
         const isCorrect = num === solvedBoard[r][c];
-
-        // ALWAYS update the board first (Visual Feedback)
         const newBoard = board.map(row => [...row]);
         newBoard[r][c] = num;
         const newHistory = [...history, board.map(row => [...row])];
 
         if (isCorrect) {
-            // --- CORRECT MOVE ---
             set({ board: newBoard, history: newHistory });
 
-            // Check Win (Full AND Correct)
             let filled = 0;
             let allCorrect = true;
             for (let i = 0; i < GRID_SIZE; i++) {
@@ -151,38 +186,44 @@ export const useGameStore = create<GameState>((set, get) => ({
 
             if (isWon) {
                 set({ status: 'won' });
+                // Persistent Stats
+                const { uid, timer, difficulty } = get();
+                if (uid) {
+                    const diffKey = difficulty.toLowerCase() as keyof UserStats['bestTime'];
+                    updateUserStats(uid, true, timer, diffKey, mistakes).catch(e => console.error("Stats Sync Failed:", e));
+                }
             }
 
-            // Sync to Firebase (Board + Progress)
             if (mode === 'pvp' && roomId) {
                 updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
 
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
-                updateProgress(roomId, playerId || "Guest", progress, mistakes, isWon ? 'won' : 'playing')
+                updateProgress(roomId, progress, mistakes, isWon ? 'won' : 'playing')
                     .catch(e => console.error("Progress Sync Failed:", e));
             }
 
         } else {
-            // --- WRONG MOVE ---
             const newMistakes = mistakes + 1;
-
-            // Update board ANYWAY to show the red number, and increment mistakes
             set({
                 mistakes: newMistakes,
                 board: newBoard,
                 history: newHistory
             });
 
-            if (newMistakes >= maxMistakes) {
+            const isLost = newMistakes >= maxMistakes;
+            if (isLost) {
                 set({ status: 'lost' });
+                // Persistent Stats
+                const { uid, timer, difficulty } = get();
+                if (uid) {
+                    const diffKey = difficulty.toLowerCase() as keyof UserStats['bestTime'];
+                    updateUserStats(uid, false, timer, diffKey, newMistakes).catch(e => console.error("Stats Sync Failed:", e));
+                }
             }
 
-            // Sync to Firebase (Mistakes + Board update)
             if (mode === 'pvp' && roomId) {
-                // Sync the wrong move so partner sees it
                 updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
 
-                // Calculate existing progress
                 let filled = 0;
                 for (let i = 0; i < GRID_SIZE; i++) {
                     for (let j = 0; j < GRID_SIZE; j++) {
@@ -191,12 +232,10 @@ export const useGameStore = create<GameState>((set, get) => ({
                 }
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
 
-                updateProgress(roomId, playerId || "Guest", progress, newMistakes, newMistakes >= maxMistakes ? 'lost' : 'playing')
+                updateProgress(roomId, progress, newMistakes, isLost ? 'lost' : 'playing')
                     .catch(e => console.error("Mistake Sync Failed:", e));
             }
         }
-
-        // Removed Leaderboard logic as per user request
     },
 
     undo: () => {
@@ -210,7 +249,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     resetGame: () => {
-        // restart with same board? or new? usually "Restart" means same board cleared.
         const { initialBoard } = get();
         set({
             board: initialBoard.map(row => [...row]),
@@ -240,7 +278,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         const newBoard = board.map(row => [...row]);
         newBoard[hint.r][hint.c] = hint.value;
 
-        // Check win condition after hint
         let isWon = true;
         for (let i = 0; i < GRID_SIZE; i++) {
             for (let j = 0; j < GRID_SIZE; j++) {
@@ -260,7 +297,6 @@ export const useGameStore = create<GameState>((set, get) => ({
             status: isWon ? 'won' : status,
         });
 
-        // Auto-clear the toast after 3 seconds
         setTimeout(() => {
             if (get().lastHint === hint) {
                 set({ lastHint: null });
@@ -268,6 +304,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         }, 3000);
     },
 
-    setHoveredCell: (cell) => set({ hoveredCell: cell }),
-    setHighlightedNumber: (num) => set({ highlightedNumber: num })
+    setHoveredCell: (cell: { r: number, c: number } | null) => set({ hoveredCell: cell }),
+    setHighlightedNumber: (num: number | null) => set({ highlightedNumber: num })
 }));
