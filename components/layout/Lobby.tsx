@@ -52,9 +52,10 @@ export const Lobby = () => {
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty
                     });
-                    const opponent = Object.values(room.players || {}).find(p => p.name !== name.trim());
+                    const currentUid = useGameStore.getState().uid;
+                    const opponent = Object.entries(room.players || {}).find(([id]) => id !== currentUid)?.[1];
                     if (opponent) {
-                        setMultiplayerState({ opponentName: opponent.name });
+                        setMultiplayerState({ opponentName: (opponent as any).name });
                     }
                     unsubscribe();
                 }
@@ -100,9 +101,10 @@ export const Lobby = () => {
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty
                     });
-                    const opponent = Object.values(room.players || {}).find(p => p.name !== name.trim());
+                    const currentUid = useGameStore.getState().uid;
+                    const opponent = Object.entries(room.players || {}).find(([id]) => id !== currentUid)?.[1];
                     if (opponent) {
-                        setMultiplayerState({ opponentName: opponent.name });
+                        setMultiplayerState({ opponentName: (opponent as any).name });
                     }
                     unsubscribe();
                 }

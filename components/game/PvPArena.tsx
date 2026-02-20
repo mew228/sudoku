@@ -42,7 +42,12 @@ export const PvPArena = () => {
         // Subscribe to players (for online status/mistakes)
         const unsubPlayers = subscribeToPlayers(roomId, (players) => {
             setIsConnected(true);
-            const opponent = Object.values(players || {}).find((p: any) => p.name !== playerId) as any;
+            const currentUid = useGameStore.getState().uid;
+
+            // Find opponent by excluding current user's UID
+            const opponentEntry = Object.entries(players || {}).find(([uid]) => uid !== currentUid);
+            const opponent = opponentEntry ? opponentEntry[1] as any : null;
+
             if (opponent) {
                 setMultiplayerState({
                     opponentName: opponent.name,
