@@ -7,11 +7,10 @@ import { Timer } from "@/components/game/Timer";
 import { HintToast } from "@/components/game/HintToast";
 import { Lobby } from "@/components/layout/Lobby";
 import { PvPArena } from "@/components/game/PvPArena";
-import { Leaderboard } from "@/components/game/Leaderboard"; // New import
 import { useGameStore } from "@/lib/store";
-import { useEffect, useState } from "react"; // Added useState
-import { Users, User, Trophy } from 'lucide-react'; // Added Trophy
-import { AnimatePresence, motion } from "framer-motion"; // New import
+import { useEffect } from "react";
+import { Users, User } from 'lucide-react';
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Home() {
   const startGame = useGameStore(state => state.startGame);
@@ -21,8 +20,6 @@ export default function Home() {
   const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
   const mistakes = useGameStore(state => state.mistakes);
   const tickTimer = useGameStore(state => state.tickTimer);
-
-  const [showLeaderboard, setShowLeaderboard] = useState(false); // New state
 
   useEffect(() => {
     // Start single player by default only if not already set
@@ -42,15 +39,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [status, tickTimer]);
 
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-50 font-sans transition-colors">
+    <main className="flex h-dvh flex-col items-center justify-center p-2 lg:p-4 bg-slate-50 font-sans transition-colors overflow-hidden select-none touch-none">
 
       {/* Hint Toast */}
       <HintToast />
 
-      {/* Sidebar / Mode Selection */}
-      <div className="absolute top-4 left-4 flex gap-2 z-50">
+      {/* Sidebar / Mode Selection - Compact on Mobile */}
+      <div className="absolute top-2 left-2 lg:top-4 lg:left-4 flex gap-2 z-50 scale-75 lg:scale-100 origin-top-left">
         <button
           onClick={() => startGame('Medium', 'single')}
           className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors border ${mode === 'single' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200 shadow-sm'}`}
@@ -65,13 +61,6 @@ export default function Home() {
           <Users size={18} />
           <span className="hidden sm:inline font-medium">PvP</span>
         </button>
-        <button
-          onClick={() => setShowLeaderboard(true)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors border bg-white text-slate-700 border-slate-200 shadow-sm hover:text-indigo-600 hover:border-indigo-200`}
-        >
-          <Trophy size={18} />
-          <span className="hidden sm:inline font-medium">Rankings</span>
-        </button>
       </div>
 
       {mode === 'pvp' ? (
@@ -83,66 +72,66 @@ export default function Home() {
         )
       ) : (
         // Single Player Mode
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-7xl px-4 mt-12 lg:mt-0">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-full p-2 overflow-hidden">
 
-          {/* Left/Top: Header & Board */}
-          <div className="flex flex-col gap-6 items-center w-full max-w-[600px]">
-            {/* Top Bar with Difficulty (Desktop) */}
-            <div className="flex flex-wrap lg:flex-nowrap w-full justify-center lg:justify-between items-center text-slate-500 font-medium px-2 gap-y-4">
-              <div className="flex gap-4 text-sm">
-                <span className="text-slate-400 font-semibold uppercase tracking-wider text-xs">Difficulty</span>
+          {/* Left/Top: Header & Board - Flex Grow to take available space */}
+          <div className="flex flex-col gap-2 items-center justify-center w-full md:flex-1 min-h-0 min-w-0 max-w-2xl">
+            {/* Top Bar with Difficulty */}
+            <div className="flex w-full justify-between items-center text-slate-500 font-medium px-2 shrink-0">
+              <div className="flex gap-1 sm:gap-2 text-xs sm:text-sm">
                 {(['Easy', 'Medium', 'Hard', 'Expert'] as const).map(diff => (
                   <button
                     key={diff}
-                    onClick={() => {
-                      startGame(diff, 'single');
-                    }}
-                    className={`hover:text-indigo-600 transition-colors ${difficulty === diff ? 'text-indigo-600 font-bold underline decoration-2 underline-offset-4' : ''}`}
+                    onClick={() => startGame(diff, 'single')}
+                    className={`px-2 py-1 rounded-md transition-colors ${difficulty === diff ? 'text-indigo-600 font-bold bg-indigo-50' : 'hover:text-indigo-600'}`}
                   >
                     {diff}
                   </button>
                 ))}
               </div>
-              <div className="hidden lg:block text-3xl font-bold text-slate-800 font-mono">
+              <div className="text-2xl sm:text-3xl font-bold text-slate-800 font-mono">
                 <Timer />
               </div>
             </div>
 
-            {/* Game Board Container */}
-            <div className="relative w-full aspect-square">
-              <Board />
+            {/* Game Board Container - Strict constraints to prevent overflow */}
+            <div className="relative w-full aspect-square flex-1 min-h-0 flex justify-center items-center py-2">
+              {/* Board Wrapper - Ensure it doesn't exceed parent height OR width */}
+              <div className="h-full w-full max-w-full aspect-square flex items-center justify-center">
+                <Board />
+              </div>
             </div>
           </div>
 
-          {/* Right Side: Controls */}
-          <div className="flex flex-col gap-8 w-full max-w-sm mt-8 lg:mt-12">
+          {/* Right Side: Controls - Fixed width on Desktop, Bottom on Mobile */}
+          <div className="flex flex-col gap-2 w-full md:w-80 md:h-full md:justify-center shrink-0">
 
             {/* Stats Row */}
-            <div className="flex justify-between items-center text-slate-600 font-medium px-4">
-              <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Mistakes</span>
-                <span className={`text-4xl font-light ${mistakes >= 3 ? 'text-red-500' : 'text-slate-800'}`}>
+            <div className="flex justify-between items-center text-slate-600 font-medium px-4 py-1">
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Mistakes</span>
+                <span className={`text-2xl font-light ${mistakes >= 3 ? 'text-red-500' : 'text-slate-800'}`}>
                   {status === 'playing' ? `${mistakes}/3` : '-/-'}
                 </span>
               </div>
-              <div className="flex flex-col items-end lg:hidden">
-                <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Time</span>
-                <Timer />
-              </div>
             </div>
 
-            {/* Action Buttons (Icons) */}
-            <GameControls />
+            {/* Action Buttons */}
+            <div className="scale-90 origin-center md:scale-100">
+              <GameControls />
+            </div>
 
             {/* Numpad */}
-            <Numpad />
+            <div className="w-full">
+              <Numpad />
+            </div>
 
             {/* New Game Button */}
             <button
               onClick={() => startGame(difficulty, mode)}
-              className="w-full py-4 bg-slate-900 text-white rounded-xl text-lg font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 tracking-wide"
+              className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm sm:text-lg font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 tracking-wide mt-auto md:mt-4"
             >
-              New Game
+              {status === 'playing' ? 'Restart' : 'New Game'}
             </button>
           </div>
 
@@ -169,29 +158,6 @@ export default function Home() {
           )}
         </div>
       )}
-      {/* Leaderboard Overlay */}
-      <AnimatePresence>
-        {showLeaderboard && (
-          <motion.div
-            key="leaderboard-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
-            onClick={() => setShowLeaderboard(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md"
-            >
-              <Leaderboard />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

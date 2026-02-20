@@ -67,90 +67,86 @@ export const PvPArena = () => {
     }, [roomId, playerId, setMultiplayerState]);
 
     return (
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-7xl px-4 mt-12 lg:mt-0">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
 
-            {/* Left/Top: Header & Board */}
-            <div className="flex flex-col gap-6 items-center w-full max-w-[600px]">
+            {/* Left/Top: Header & Board - Flex Grow */}
+            <div className="flex flex-col gap-2 items-center justify-center w-full md:flex-1 min-h-0 min-w-0 max-w-2xl pt-2">
 
-                {/* Header - PvP Specific */}
-                <div className="flex w-full justify-between items-center text-slate-500 font-medium px-2">
-                    <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full border border-indigo-100">
-                        <Users size={18} />
-                        <span className="font-bold text-sm tracking-wide">PvP MATCH</span>
-                        <span className="text-xs opacity-60 ml-1">({difficulty})</span>
-                        <div className={`w-2 h-2 rounded-full ml-2 ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={isConnected ? "Live Sync Active" : "Connecting..."} />
+                {/* Header - PvP Specific - Compact & Unified */}
+                <div className="flex w-full justify-between items-center text-slate-500 font-medium px-2 z-10 shrink-0 gap-2">
+                    {/* Status Pill with Opponent Info */}
+                    <div className="flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1.5 rounded-full border border-slate-200 shadow-sm grow-0 shrink overflow-hidden max-w-[70%]">
+                        <div className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600">
+                            <Users size={14} />
+                        </div>
+                        <div className="flex flex-col leading-none truncate">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VS</span>
+                            <div className="flex items-center gap-1.5 truncate">
+                                <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">{opponentName || 'Opponent'}</span>
+                                <span className={`text-[10px] sm:text-xs font-mono font-bold ${opponentProgress > 50 ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                    {opponentProgress}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className={`shrink-0 w-2 h-2 rounded-full ml-1 ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={isConnected ? "Live Sync Active" : "Connecting..."} />
                     </div>
-                    <div className="text-3xl font-bold text-slate-800 font-mono bg-white px-4 py-1 rounded-lg border border-slate-100 shadow-sm">
+
+                    {/* Timer */}
+                    <div className="text-xl sm:text-2xl font-bold text-slate-800 font-mono bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm shrink-0">
                         <Timer />
                     </div>
                 </div>
 
-                {/* Game Board Container */}
-                <div className="relative w-full aspect-square">
-                    <Board />
-
-                    {/* Opponent Progress Bar Overlay */}
-                    <div className="absolute -top-14 left-0 right-0 flex items-center gap-3 bg-white/90 backdrop-blur-md rounded-xl px-5 py-3 border border-slate-200 shadow-lg z-10">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-xs font-black shadow-md shadow-rose-200">
-                            {opponentName ? opponentName[0]?.toUpperCase() : '?'}
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col gap-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-700 truncate">{opponentName || 'Opponent'}</span>
-                                <span className="text-[10px] font-bold text-slate-400">{opponentProgress}%</span>
-                            </div>
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full bg-gradient-to-r from-rose-400 to-pink-600 rounded-full"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${opponentProgress}%` }}
-                                    transition={{ duration: 0.5 }}
-                                />
-                            </div>
-                        </div>
+                {/* Game Board Container - Strict constraints */}
+                <div className="relative w-full aspect-square flex-1 min-h-0 flex justify-center items-center py-2">
+                    <div className="h-full w-full max-w-full aspect-square flex items-center justify-center">
+                        <Board />
                     </div>
                 </div>
             </div>
 
-            {/* Right Side: Controls */}
-            <div className="flex flex-col gap-8 w-full max-w-sm mt-8 lg:mt-12">
+            {/* Right Side: Controls - Fixed width Desktop, Dynamic Mobile */}
+            <div className="flex flex-col gap-2 w-full md:w-80 md:h-full md:justify-center shrink-0">
 
                 {/* Stats Row */}
-                <div className="flex justify-between items-center text-slate-600 font-medium px-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center text-slate-600 font-medium px-4 py-1">
                     <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Mistakes</span>
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Mistakes</span>
                         <div className="flex items-baseline gap-1">
-                            <span className={`text-4xl font-light ${mistakes >= 3 ? 'text-rose-500' : 'text-slate-800'}`}>
+                            <span className={`text-2xl font-light ${mistakes >= 3 ? 'text-rose-500' : 'text-slate-800'}`}>
                                 {mistakes}
                             </span>
-                            <span className="text-sm text-slate-300 font-bold">/3</span>
+                            <span className="text-xs text-slate-300 font-bold">/3</span>
                         </div>
                     </div>
-                    <div className="h-10 w-[1px] bg-slate-100"></div>
+                    {/* Status Badge */}
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Status</span>
-                        <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</span>
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
                             PLAYING
                         </span>
                     </div>
                 </div>
 
-                {/* Action Buttons (Icons) */}
-                <GameControls />
+                {/* Action Buttons */}
+                <div className="scale-90 origin-center md:scale-100">
+                    <GameControls />
+                </div>
 
                 {/* Numpad */}
-                <Numpad />
+                <div className="w-full">
+                    <Numpad />
+                </div>
 
                 {/* Surrender / Leave Button */}
                 <button
                     onClick={() => {
-                        // For now just restart implies leaving/resetting, but ideally we'd have a specific "Leave Match" action
                         useGameStore.getState().setMultiplayerState({ mode: 'single', status: 'idle', roomId: null });
                     }}
-                    className="w-full py-4 bg-slate-100 text-slate-500 hover:text-rose-500 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-sm font-bold transition-all active:scale-95 tracking-wide flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-slate-100 text-slate-500 hover:text-rose-500 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg text-sm font-bold transition-all active:scale-95 tracking-wide flex items-center justify-center gap-2 mt-auto md:mt-4"
                 >
                     <XCircle size={18} />
-                    Leave Match
+                    Leave
                 </button>
             </div>
 

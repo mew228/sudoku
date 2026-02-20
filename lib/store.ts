@@ -1,9 +1,7 @@
-```typescript
 import { create } from 'zustand';
 import { generateSudoku, BLANK, GRID_SIZE, Difficulty } from './logic/sudoku';
 import { getSmartHint, HintResult } from './logic/hints';
 import { updateProgress, updateBoardCell } from './firebase/rooms';
-import { addScore } from './firebase/leaderboard';
 
 interface GameState {
     board: number[][];
@@ -21,6 +19,7 @@ interface GameState {
     hintsRemaining: number;
     lastHint: HintResult | null;
     hoveredCell: { r: number, c: number } | null;
+    highlightedNumber: number | null;
 
     // Multiplayer
     mode: 'single' | 'pvp' | 'bot';
@@ -111,9 +110,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         if (initialBoard[r][c] !== BLANK) return;
 
-        // Notes Mode (Local only for simplification)
+        // Notes Mode
         if (isNotesMode) {
-            const noteKey = `${ r },${ c },${ num } `;
+            const noteKey = r + "," + c + "," + num;
             const newNotes = new Set(notes);
             if (newNotes.has(noteKey)) {
                 newNotes.delete(noteKey);
@@ -128,43 +127,36 @@ export const useGameStore = create<GameState>((set, get) => ({
         if (board[r][c] === num) return;
 
         // CO-OP LOGIC:
-        // 1. Check Correctness
         const isCorrect = num === solvedBoard[r][c];
+
+        // ALWAYS update the board first (Visual Feedback)
+        const newBoard = board.map(row => [...row]);
+        newBoard[r][c] = num;
+        const newHistory = [...history, board.map(row => [...row])];
 
         if (isCorrect) {
             // --- CORRECT MOVE ---
-            const newBoard = board.map(row => [...row]);
-            newBoard[r][c] = num;
-            
-            const newHistory = [...history, board.map(row => [...row])];
-            
             set({ board: newBoard, history: newHistory });
 
-            // Check Win
+            // Check Win (Full AND Correct)
             let filled = 0;
+            let allCorrect = true;
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     if (newBoard[i][j] !== 0) filled++;
+                    if (newBoard[i][j] !== 0 && newBoard[i][j] !== solvedBoard[i][j]) allCorrect = false;
                 }
             }
-            const isWon = filled === GRID_SIZE * GRID_SIZE;
+            const isWon = (filled === GRID_SIZE * GRID_SIZE) && allCorrect;
 
             if (isWon) {
                 set({ status: 'won' });
-                // Leaderboard
-                setTimeout(() => {
-                    const { timer, difficulty } = get();
-                    const name = playerId || "Guest";
-                    addScore(name, timer, difficulty).catch(console.error);
-                }, 0);
             }
 
             // Sync to Firebase (Board + Progress)
             if (mode === 'pvp' && roomId) {
-                // 1. Update Board
                 updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
-                
-                // 2. Update Progress
+
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
                 updateProgress(roomId, playerId || "Guest", progress, mistakes, isWon ? 'won' : 'playing')
                     .catch(e => console.error("Progress Sync Failed:", e));
@@ -173,27 +165,38 @@ export const useGameStore = create<GameState>((set, get) => ({
         } else {
             // --- WRONG MOVE ---
             const newMistakes = mistakes + 1;
-            set({ mistakes: newMistakes });
+
+            // Update board ANYWAY to show the red number, and increment mistakes
+            set({
+                mistakes: newMistakes,
+                board: newBoard,
+                history: newHistory
+            });
 
             if (newMistakes >= maxMistakes) {
                 set({ status: 'lost' });
             }
 
-            // Sync to Firebase (Mistakes Only)
+            // Sync to Firebase (Mistakes + Board update)
             if (mode === 'pvp' && roomId) {
-                 // Calculate existing progress
+                // Sync the wrong move so partner sees it
+                updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
+
+                // Calculate existing progress
                 let filled = 0;
                 for (let i = 0; i < GRID_SIZE; i++) {
                     for (let j = 0; j < GRID_SIZE; j++) {
-                        if (board[i][j] !== 0) filled++;
+                        if (newBoard[i][j] !== 0) filled++;
                     }
                 }
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
-                
+
                 updateProgress(roomId, playerId || "Guest", progress, newMistakes, newMistakes >= maxMistakes ? 'lost' : 'playing')
                     .catch(e => console.error("Mistake Sync Failed:", e));
             }
         }
+
+        // Removed Leaderboard logic as per user request
     },
 
     undo: () => {
@@ -265,5 +268,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         }, 3000);
     },
 
-    setHoveredCell: (cell) => set({ hoveredCell: cell })
+    setHoveredCell: (cell) => set({ hoveredCell: cell }),
+    setHighlightedNumber: (num) => set({ highlightedNumber: num })
 }));

@@ -193,23 +193,22 @@ export const updateProgress = async (
     }
 };
 
-const testConnection = async (setLoading: (loading: boolean) => void) => {
-    setLoading(true);
-    try {
-        if (!db) throw new Error("Database not initialized");
 
-        console.log("Testing connection...", db);
-        // using a standard path to avoid potential .info restrictions or issues
-        const testRef = ref(db, "status");
-
-        console.log("Getting snapshot...");
-        await get(testRef); // Just check if we can read
-        alert(`Firebase Connected!`);
-    } catch (e) {
-        console.error("Connection Test Failed:", e);
-        console.error("Stack:", e instanceof Error ? e.stack : "No stack");
-        alert(`Connection Test Failed: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-        setLoading(false);
-    }
+/**
+ * Update a single cell in the shared board (Co-op mode).
+ */
+export const updateBoardCell = async (roomId: string, r: number, c: number, value: number) => {
+    await set(ref(getDb(), `rooms/${roomId}/currentBoard/${r}/${c}`), value);
 };
+
+/**
+ * Subscribe to the shared board state (Co-op mode).
+ */
+export const subscribeToBoard = (roomId: string, callback: (board: number[][]) => void) => {
+    const boardRef = ref(getDb(), `rooms/${roomId}/currentBoard`);
+    return onValue(boardRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) callback(data);
+    });
+};
+

@@ -58,7 +58,7 @@ export const Numpad = () => {
     };
 
     return (
-        <div className="grid grid-cols-3 gap-2 w-full touch-none">
+        <div className="grid grid-cols-9 lg:grid-cols-3 gap-1 lg:gap-2 w-full touch-none">
             {numbers.map((num) => (
                 <motion.div
                     key={num}
@@ -77,7 +77,7 @@ export const Numpad = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.90 }}
                     onClick={() => setCellValue(num)} // Keep click for accessibility/speed
-                    className="aspect-[4/3] flex items-center justify-center text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none"
+                    className="aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-colors duration-75 cursor-grab active:cursor-grabbing touch-none select-none"
                     style={{ touchAction: 'none' }} // Hint for touch devices
                 >
                     {num}

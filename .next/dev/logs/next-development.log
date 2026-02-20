@@ -1,292 +1,112 @@
-[00:00:02.500] Server  LOG     ✓ Ready in 1694ms
-[00:00:18.527] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:18.527] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:00:18.527] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:00:19.647] Server  LOG     Initializing Firebase with config: {}
-[00:00:19.656] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:00:35.742] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:35.742] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:00:35.742] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:06:36.812] Server  LOG     ✓ Compiled in 927ms
-[00:06:42.609] Server  LOG     ✓ Compiled in 93ms
-[00:06:45.518] Server  LOG     ✓ Compiled in 112ms
-[00:23:51.596] Server  LOG     ✓ Compiled in 110ms
-[00:26:34.246] Server  LOG     Initializing Firebase with config: {}
-[00:26:34.257] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
-[00:26:34.336] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:26:34.336] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:26:34.336] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:26:43.807] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:26:43.807] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:26:43.807] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:27:05.024] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:27:05.312] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
-[00:27:05.313] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
-[00:27:15.528] Browser LOG     Checking Room ID: Y6WXUU
-[00:33:38.146] Server  LOG     ✓ Compiled in 75ms
-[00:34:00.918] Server  LOG     ✓ Compiled in 68ms
-[00:34:01.615] Browser ERROR   ./lib/store.ts:113:30
+[00:00:03.253] Server  LOG     ✓ Ready in 2.3s
+[00:00:03.305] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.305] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:00:03.305] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:00:03.306] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.306] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:00:03.306] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:00:04.376] Server  LOG     Initializing Firebase with config: {}
+[00:00:04.382] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:00:06.691] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.691] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:00:06.691] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:01:04.644] Browser LOG     Checking Room ID: KKPPDJ
+[00:01:10.896] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:11.155] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:01:11.155] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:01:24.865] Browser LOG     Checking Room ID: BKPJKV
+[00:01:33.821] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:33.821] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:01:33.821] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:07:24.978] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:24.978] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:07:24.978] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:07:35.874] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:35.874] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:07:35.874] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:07:44.686] Browser LOG     Checking Room ID: 9DRJFD
+[00:12:20.103] Browser ERROR   uncaughtError: NotFoundError: Failed to execute 'releasePointerCapture' on 'Element': No active pointer with the given id is found.
+[00:17:30.747] Server  LOG     ✓ Compiled in 933ms
+[00:18:04.435] Server  LOG     ✓ Compiled in 113ms
+[00:18:41.693] Server  LOG     ✓ Compiled in 100ms
+[00:18:59.678] Server  LOG     ✓ Compiled in 204ms
+[00:21:22.239] Server  LOG     Initializing Firebase with config: {}
+[00:21:22.247] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:21:22.324] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:21:22.324] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:21:22.324] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:21:25.296] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:21:25.296] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:21:25.296] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:22:00.961] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:22:00.962] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:22:00.962] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:22:25.839] Browser LOG     Checking Room ID: WZJRNF
+[00:25:53.255] Browser LOG     Checking Room ID: ZQA3D4
+[00:28:45.102] Server  LOG     ✓ Compiled in 128ms
+[00:29:19.372] Server  LOG     ✓ Compiled in 93ms
+[00:29:19.783] Browser ERROR   ./components/game/PvPArena.tsx:70:5
 Parsing ecmascript source code failed
-  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  112 |         if (isNotesMode) {
-> 113 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  114 |             const newNotes = new Set(notes);
-  115 |             if (newNotes.has(noteKey)) {
-  116 |                 newNotes.delete(noteKey);
+  68 |
+  69 |     return (
+> 70 |     return (
+     |     ^^^^^^
+  71 |         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
+  72 |
+  73 |             {/* Left/Top: Header & Board - Flex Grow */}
 
-Expected ';', '}' or <eof>
+Expression expected
 
 Import traces:
   Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
+    ./components/game/PvPArena.tsx [Client Component Browser]
     ./app/page.tsx [Client Component Browser]
     ./app/page.tsx [Server Component]
 
   Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
+    ./components/game/PvPArena.tsx [Client Component SSR]
     ./app/page.tsx [Client Component SSR]
     ./app/page.tsx [Server Component]
-[00:34:01.615] Browser ERROR   ./lib/store.ts:113:30
+[00:29:19.784] Browser ERROR   ./components/game/PvPArena.tsx:70:5
 Parsing ecmascript source code failed
-  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  112 |         if (isNotesMode) {
-> 113 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  114 |             const newNotes = new Set(notes);
-  115 |             if (newNotes.has(noteKey)) {
-  116 |                 newNotes.delete(noteKey);
+  68 |
+  69 |     return (
+> 70 |     return (
+     |     ^^^^^^
+  71 |         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
+  72 |
+  73 |             {/* Left/Top: Header & Board - Flex Grow */}
 
-Expected ';', '}' or <eof>
+Expression expected
 
 Import traces:
   Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
+    ./components/game/PvPArena.tsx [Client Component Browser]
     ./app/page.tsx [Client Component Browser]
     ./app/page.tsx [Server Component]
 
   Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
+    ./components/game/PvPArena.tsx [Client Component SSR]
     ./app/page.tsx [Client Component SSR]
     ./app/page.tsx [Server Component]
-[00:34:32.609] Browser ERROR   ./lib/store.ts:113:30
-Parsing ecmascript source code failed
-  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  112 |         if (isNotesMode) {
-> 113 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  114 |             const newNotes = new Set(notes);
-  115 |             if (newNotes.has(noteKey)) {
-  116 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:34:32.610] Browser ERROR   ./lib/store.ts:113:30
-Parsing ecmascript source code failed
-  111 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  112 |         if (isNotesMode) {
-> 113 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  114 |             const newNotes = new Set(notes);
-  115 |             if (newNotes.has(noteKey)) {
-  116 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:34:34.615] Browser ERROR   ./lib/store.ts:118:30
-Parsing ecmascript source code failed
-  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  117 |         if (isNotesMode) {
-> 118 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  119 |             const newNotes = new Set(notes);
-  120 |             if (newNotes.has(noteKey)) {
-  121 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:34:34.615] Browser ERROR   ./lib/store.ts:118:30
-Parsing ecmascript source code failed
-  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  117 |         if (isNotesMode) {
-> 118 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  119 |             const newNotes = new Set(notes);
-  120 |             if (newNotes.has(noteKey)) {
-  121 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:34:48.619] Browser ERROR   ./lib/store.ts:118:30
-Parsing ecmascript source code failed
-  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  117 |         if (isNotesMode) {
-> 118 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  119 |             const newNotes = new Set(notes);
-  120 |             if (newNotes.has(noteKey)) {
-  121 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:34:48.619] Browser ERROR   ./lib/store.ts:118:30
-Parsing ecmascript source code failed
-  116 |         // If isNotesMode is somehow true, we keep the logic, but since we disabled the toggle, this block is unreachable unless default is true.
-  117 |         if (isNotesMode) {
-> 118 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  119 |             const newNotes = new Set(notes);
-  120 |             if (newNotes.has(noteKey)) {
-  121 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:36:00.619] Browser ERROR   ./lib/store.ts:116:30
-Parsing ecmascript source code failed
-  114 |         // Notes Mode (Local only for simplification)
-  115 |         if (isNotesMode) {
-> 116 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  117 |             const newNotes = new Set(notes);
-  118 |             if (newNotes.has(noteKey)) {
-  119 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:36:00.619] Browser ERROR   ./lib/store.ts:116:30
-Parsing ecmascript source code failed
-  114 |         // Notes Mode (Local only for simplification)
-  115 |         if (isNotesMode) {
-> 116 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  117 |             const newNotes = new Set(notes);
-  118 |             if (newNotes.has(noteKey)) {
-  119 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:36:01.461] Server  LOG     ✓ Compiled in 74ms
-[00:36:01.615] Browser ERROR   ./lib/store.ts:116:30
-Parsing ecmascript source code failed
-  114 |         // Notes Mode (Local only for simplification)
-  115 |         if (isNotesMode) {
-> 116 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  117 |             const newNotes = new Set(notes);
-  118 |             if (newNotes.has(noteKey)) {
-  119 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
-[00:36:01.615] Browser ERROR   ./lib/store.ts:116:30
-Parsing ecmascript source code failed
-  114 |         // Notes Mode (Local only for simplification)
-  115 |         if (isNotesMode) {
-> 116 |             const noteKey = `${ r },${ c },${ num } `;
-      |                              ^
-  117 |             const newNotes = new Set(notes);
-  118 |             if (newNotes.has(noteKey)) {
-  119 |                 newNotes.delete(noteKey);
-
-Expected ';', '}' or <eof>
-
-Import traces:
-  Client Component Browser:
-    ./lib/store.ts [Client Component Browser]
-    ./app/page.tsx [Client Component Browser]
-    ./app/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./lib/store.ts [Client Component SSR]
-    ./app/page.tsx [Client Component SSR]
-    ./app/page.tsx [Server Component]
+[00:33:40.180] Server  LOG     ✓ Compiled in 98ms
+[00:37:48.452] Server  LOG     Initializing Firebase with config: {}
+[00:37:48.460] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:37:48.533] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:37:48.533] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:37:48.533] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:38:00.423] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:38:00.423] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:38:00.423] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:38:35.399] Browser LOG     Checking Room ID: X78R29
+[00:41:52.122] Server  LOG     ✓ Compiled in 147ms
+[00:44:00.913] Server  LOG     Initializing Firebase with config: {}
+[00:44:00.923] Server  LOG     Firebase initialized successfully. DB URL: "https://sudoku-fb1a9-default-rtdb.firebaseio.com"
+[00:44:01.203] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:44:01.203] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:44:01.203] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:45:09.223] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:45:09.223] Browser LOG     Initializing Firebase with config: {"apiKey":"HIDDEN","appId":"1:876606712356:web:cdb27894402e24c74586b1","authDomain":"sudoku-fb1a9.firebaseapp.com","databaseURL":"https://sudoku-fb1a9-default-rtdb.firebaseio.com","messagingSenderId":"876606712356","projectId":"sudoku-fb1a9","storageBucket":"sudoku-fb1a9.firebasestorage.app"}
+[00:45:09.223] Browser LOG     Firebase initialized successfully. DB URL: https://sudoku-fb1a9-default-rtdb.firebaseio.com
+[00:45:15.792] Browser LOG     Checking Room ID: RWMYG8
+[00:47:04.620] Server  LOG     ✓ Compiled in 61ms

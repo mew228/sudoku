@@ -71,7 +71,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
             // onDrop={handleDrop} // Removed
             className={cn(
                 "relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-200",
-                "text-2xl sm:text-3xl font-light select-none",
+                "text-lg sm:text-xl md:text-2xl lg:text-3xl font-light select-none",
                 // Base Border
                 "border-[0.5px] border-slate-300",
 
@@ -107,9 +107,6 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                 isSelected && isError && "!border-red-600 z-10",
                 !isSelected && isError && "!border-red-200",
 
-                // Construct Structural Borders (Thick 3x3)
-                // We leave the base structural borders at the top of the class list (lower priority in cascade if we use !important elsewhere,
-                // but here we rely on order or !important. The dynamic borders above use ! so they should win).
 
                 // Text Color Overrides
                 initial && !isSelected && "text-slate-900 font-medium",
