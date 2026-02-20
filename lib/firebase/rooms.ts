@@ -17,8 +17,8 @@ export interface Room {
     status: 'waiting' | 'playing' | 'finished';
     difficulty: Difficulty;
     initialBoard: number[][];
-    currentBoard: number[][];
     solvedBoard: number[][];
+    board: number[][];
     players: {
         [uid: string]: {
             name: string;
