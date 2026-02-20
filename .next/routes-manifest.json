@@ -41,6 +41,12 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/liveblocks-auth",
+      "regex": "^/api/liveblocks\\-auth(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/liveblocks\\-auth(?:/)?$"
+    },
+    {
       "page": "/favicon.ico",
       "regex": "^/favicon\\.ico(?:/)?$",
       "routeKeys": {},

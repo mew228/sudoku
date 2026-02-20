@@ -59,6 +59,9 @@ interface GameState {
     setRemoteBoard: (board: number[][]) => void;
     setCellOwners: (owners: Record<string, string>) => void;
     setCurrentTurn: (uid: string | null) => void;
+
+    // Bot Action
+    playBotMove: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -115,47 +118,11 @@ export const useGameStore = create<GameState>((set, get) => ({
             hintsRemaining: 3,
             lastHint: null,
             cellOwners: {},
-            mode
+            mode,
+            opponentName: mode === 'bot' ? 'AI Bot' : null,
+            uid: mode === 'bot' ? 'local-player' : get().uid, // assign dummy uid for local bot match
+            currentTurn: mode === 'bot' ? 'local-player' : null
         });
-
-        // Handle Bot Mode
-        if (mode === 'bot') {
-            const botInterval = setInterval(() => {
-                const { status, board, solvedBoard, mistakes, roomId, difficulty } = useGameStore.getState();
-                if (status !== 'playing') {
-                    clearInterval(botInterval);
-                    return;
-                }
-
-                // Bot logic: find a random empty cell and fill it
-                const emptyCells = [];
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
-                        if (board[r][c] === 0) emptyCells.push({ r, c });
-                    }
-                }
-
-                if (emptyCells.length > 0) {
-                    const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                    const correctVal = solvedBoard[r][c];
-
-                    // Simple bot: always gets it right for now, but takes time
-                    // We simulate progress for the "opponent" (the bot)
-                    const totalCells = 81;
-                    const filledCells = totalCells - emptyCells.length + 1;
-                    const progress = Math.floor((filledCells / totalCells) * 100);
-
-                    set({
-                        opponentProgress: progress,
-                        opponentName: 'AI Bot'
-                    });
-
-                    if (progress >= 100) {
-                        set({ status: 'lost', opponentStatus: 'won' });
-                    }
-                }
-            }, 5000 + (Math.random() * 5000)); // Bot solves a cell every 5-10 seconds
-        }
     },
 
     setMultiplayerState: (state: Partial<GameState>) => set(state),
@@ -170,7 +137,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         if (!selectedCell || status === 'won' || status === 'lost') return;
 
         // Enforce turn-based logic
-        if (mode === 'pvp' && currentTurn && uid !== currentTurn) return;
+        if ((mode === 'pvp' || mode === 'bot') && currentTurn && uid !== currentTurn) return;
 
         const { r, c } = selectedCell;
 
@@ -224,6 +191,12 @@ export const useGameStore = create<GameState>((set, get) => ({
                 if (action) {
                     action({ type: 'CELL', r, c, val: num, progress, mistakes, status: isWon ? 'won' : 'playing', switchTurn: true });
                 }
+            } else if (mode === 'bot') {
+                set({ currentTurn: 'bot' });
+                // Trigger Bot Move
+                setTimeout(() => {
+                    useGameStore.getState().playBotMove();
+                }, 1000 + Math.random() * 2000); // 1-3s thinking time
             }
 
         } else {
@@ -258,6 +231,12 @@ export const useGameStore = create<GameState>((set, get) => ({
                 if (action) {
                     action({ type: 'CELL', r, c, val: num, progress, mistakes: newMistakes, status: isLost ? 'lost' : 'playing', switchTurn: true });
                 }
+            } else if (mode === 'bot') {
+                set({ currentTurn: 'bot' });
+                // Trigger Bot Move even on mistake
+                setTimeout(() => {
+                    useGameStore.getState().playBotMove();
+                }, 1000 + Math.random() * 2000);
             }
         }
     },
@@ -327,6 +306,51 @@ export const useGameStore = create<GameState>((set, get) => ({
                 set({ lastHint: null });
             }
         }, 3000);
+    },
+
+    playBotMove: () => {
+        const { board, solvedBoard, status, cellOwners } = get();
+        if (status !== 'playing') return;
+
+        const emptyCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (board[r][c] === 0) emptyCells.push({ r, c });
+            }
+        }
+
+        if (emptyCells.length > 0) {
+            const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const correctVal = solvedBoard[r][c];
+
+            const newBoard = board.map(row => [...row]);
+            newBoard[r][c] = correctVal;
+
+            const newCellOwners = { ...cellOwners, [`${r},${c}`]: 'bot' };
+
+            let filled = 0;
+            let allCorrect = true;
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (newBoard[i][j] !== 0) filled++;
+                    if (newBoard[i][j] !== 0 && newBoard[i][j] !== solvedBoard[i][j]) allCorrect = false;
+                }
+            }
+
+            const isWon = (filled === GRID_SIZE * GRID_SIZE) && allCorrect;
+            const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
+
+            set({
+                board: newBoard,
+                cellOwners: newCellOwners,
+                opponentProgress: progress,
+                currentTurn: 'local-player' // Give turn back
+            });
+
+            if (isWon) {
+                set({ status: 'lost', opponentStatus: 'won' }); // Human lost
+            }
+        }
     },
 
     setHoveredCell: (cell: { r: number, c: number } | null) => set({ hoveredCell: cell }),
