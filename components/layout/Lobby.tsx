@@ -47,7 +47,7 @@ export const Lobby = () => {
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
-                        board: room.initialBoard,
+                        board: room.board || room.initialBoard,
                         initialBoard: room.initialBoard,
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty
@@ -96,7 +96,7 @@ export const Lobby = () => {
                 if (room.status === 'playing') {
                     setMultiplayerState({
                         status: 'playing',
-                        board: room.initialBoard,
+                        board: room.board || room.initialBoard,
                         initialBoard: room.initialBoard,
                         solvedBoard: room.solvedBoard,
                         difficulty: room.difficulty

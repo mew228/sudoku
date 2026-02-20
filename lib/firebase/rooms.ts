@@ -81,13 +81,13 @@ export const createRoom = async (playerName: string, difficulty: Difficulty): Pr
         difficulty,
         initialBoard: initial,
         solvedBoard: solved,
+        board: currentBoard, // Shared board at root
         players: {
             [user.uid]: {
                 name: playerName || user.displayName || 'Player 1',
                 progress: 0,
                 mistakes: 0,
                 status: 'playing',
-                board: currentBoard
             }
         },
         winner: null,
@@ -122,8 +122,7 @@ export const joinRoom = async (roomId: string, playerName: string) => {
         name: playerName || user.displayName || 'Player 2',
         progress: room.players[user.uid]?.progress || 0,
         mistakes: room.players[user.uid]?.mistakes || 0,
-        status: 'playing',
-        board: room.players[user.uid]?.board || room.initialBoard.map((row: any) => [...row])
+        status: 'playing'
     });
 
     // Auto-start when 2nd player joins
@@ -185,14 +184,25 @@ export const subscribeToPlayers = (roomId: string, callback: (players: Room['pla
     });
 };
 
+/**
+ * Listen to the underlying Firebase connection status.
+ */
+export const listenToConnection = (callback: (connected: boolean) => void) => {
+    const connectedRef = ref(getDb(), ".info/connected");
+    return onValue(connectedRef, (snap) => {
+        callback(snap.val() === true);
+    });
+};
+
 export const updateBoardCell = async (roomId: string, r: number, c: number, value: number) => {
     const user = getAuth().currentUser;
     if (!user) return;
-    await set(ref(getDb(), `rooms/${roomId}/players/${user.uid}/board/${r}/${c}`), value);
+    // Write to SHARED board at room root
+    await set(ref(getDb(), `rooms/${roomId}/board/${r}/${c}`), value);
 };
 
-export const subscribeToBoard = (roomId: string, uid: string, callback: (board: number[][]) => void) => {
-    const boardRef = ref(getDb(), `rooms/${roomId}/players/${uid}/board`);
+export const subscribeToBoard = (roomId: string, callback: (board: number[][]) => void) => {
+    const boardRef = ref(getDb(), `rooms/${roomId}/board`);
     return onValue(boardRef, (snapshot) => {
         const data = snapshot.val();
         if (data) callback(data);

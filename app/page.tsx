@@ -11,6 +11,8 @@ import { useGameStore } from "@/lib/store";
 import { useEffect } from "react";
 import { Users, User, Swords, Trophy, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { listenToAuth } from "@/lib/firebase/auth";
+import { listenToConnection } from "@/lib/firebase/rooms";
 
 export default function Home() {
   const startGame = useGameStore(state => state.startGame);
@@ -27,6 +29,28 @@ export default function Home() {
       startGame(difficulty);
     }
   }, [status, mode, startGame, difficulty]);
+
+  useEffect(() => {
+    // Auth Listener
+    const unsubAuth = listenToAuth((user) => {
+      if (user) {
+        useGameStore.setState({
+          uid: (user as any).uid,
+          playerName: (user as any).displayName || 'Guest'
+        });
+      }
+    });
+
+    // Connection Listener
+    const unsubConn = listenToConnection((connected: boolean) => {
+      useGameStore.setState({ isFirebaseConnected: connected });
+    });
+
+    return () => {
+      unsubAuth();
+      unsubConn();
+    };
+  }, []);
 
   // Centralized Timer Logic
   useEffect(() => {

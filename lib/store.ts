@@ -27,9 +27,12 @@ interface GameState {
     roomId: string | null;
     playerId: string | null;
     uid: string | null;
+    playerName: string | null;
     opponentProgress: number; // 0-100
     opponentName: string | null;
     opponentStatus: 'playing' | 'won' | 'lost' | 'waiting' | null;
+    isFirebaseConnected: boolean;
+    lastSyncError: string | null;
 
     // Actions
     startGame: (difficulty: Difficulty, mode?: 'single' | 'pvp' | 'bot') => void;
@@ -74,9 +77,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     roomId: null,
     playerId: null,
     uid: null,
+    playerName: null,
     opponentProgress: 0,
     opponentName: null,
     opponentStatus: null,
+    isFirebaseConnected: true, // Default to true, listener will update
+    lastSyncError: null,
 
     setRemoteBoard: (board: number[][]) => set({ board }),
 
@@ -195,11 +201,17 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
 
             if (mode === 'pvp' && roomId) {
-                updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
+                updateBoardCell(roomId, r, c, num).catch(e => {
+                    console.error("Board Sync Failed:", e);
+                    set({ lastSyncError: `Board Sync: ${e.message}` });
+                });
 
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
                 updateProgress(roomId, progress, mistakes, isWon ? 'won' : 'playing')
-                    .catch(e => console.error("Progress Sync Failed:", e));
+                    .catch(e => {
+                        console.error("Progress Sync Failed:", e);
+                        set({ lastSyncError: `Progress Sync: ${e.message}` });
+                    });
             }
 
         } else {
@@ -222,7 +234,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
 
             if (mode === 'pvp' && roomId) {
-                updateBoardCell(roomId, r, c, num).catch(e => console.error("Board Sync Failed:", e));
+                updateBoardCell(roomId, r, c, num).catch(e => {
+                    console.error("Mistake Board Sync Failed:", e);
+                    set({ lastSyncError: `Board Sync: ${e.message}` });
+                });
 
                 let filled = 0;
                 for (let i = 0; i < GRID_SIZE; i++) {
@@ -233,7 +248,10 @@ export const useGameStore = create<GameState>((set, get) => ({
                 const progress = Math.floor((filled / (GRID_SIZE * GRID_SIZE)) * 100);
 
                 updateProgress(roomId, progress, newMistakes, isLost ? 'lost' : 'playing')
-                    .catch(e => console.error("Mistake Sync Failed:", e));
+                    .catch(e => {
+                        console.error("Mistake Progress Sync Failed:", e);
+                        set({ lastSyncError: `Mistake Sync: ${e.message}` });
+                    });
             }
         }
     },
