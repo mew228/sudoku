@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // We read the secret key from the environment variables
 const liveblocks = new Liveblocks({
-    secret: process.env.LIVEBLOCKS_SECRET_KEY as string,
+    secret: process.env.LIVEBLOCKS_SECRET_KEY || "sk_dev_dummy_key_for_build",
 });
 
 export async function POST(request: NextRequest) {
