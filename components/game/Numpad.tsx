@@ -13,6 +13,8 @@ export const Numpad = () => {
             e.preventDefault();
             return;
         }
+        // Force clear any lingering hovers on start
+        useGameStore.getState().setHoveredCell(null);
     };
 
     // Helper to find the cell under the cursor/finger using native event
@@ -50,9 +52,14 @@ export const Numpad = () => {
         if (isOpponentTurn) return;
 
         const cell = getCellFromEvent(e);
-
         const currentHover = useGameStore.getState().hoveredCell;
-        if (cell?.r !== currentHover?.r || cell?.c !== currentHover?.c) {
+
+        if (!cell) {
+            if (currentHover !== null) useGameStore.getState().setHoveredCell(null);
+            return;
+        }
+
+        if (cell.r !== currentHover?.r || cell.c !== currentHover?.c) {
             useGameStore.getState().setHoveredCell(cell);
         }
     };
@@ -104,8 +111,9 @@ export const Numpad = () => {
                         playSound('click');
                         setCellValue(num);
                     }}
+                    draggable={false} // Prevent native HTML5 drag ghost image
                     className={`aspect-square lg:aspect-[4/3] flex items-center justify-center text-2xl lg:text-4xl font-light text-indigo-600 bg-white shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-700 active:bg-indigo-100 rounded-lg lg:rounded-xl transition-all duration-300 select-none touch-none ${isOpponentTurn ? 'opacity-50 grayscale cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                    style={{ touchAction: 'none' }}
+                    style={{ touchAction: 'none', WebkitUserDrag: 'none' } as React.CSSProperties}
                 >
                     {num}
                 </motion.div>

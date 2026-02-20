@@ -315,7 +315,9 @@ const PvPArenaContent = () => {
                             </p>
 
                             <button
-                                onClick={() => useGameStore.getState().setMultiplayerState({ mode: 'pvp', status: 'idle', roomId: null })}
+                                onClick={() => {
+                                    useGameStore.getState().setMultiplayerState({ mode: 'single', status: 'idle', roomId: null, currentTurn: null });
+                                }}
                                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-95 ${localStatus === 'won'
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                                     : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-300'
@@ -493,7 +495,9 @@ const BotArenaContent = () => {
                             </p>
 
                             <button
-                                onClick={() => setMultiplayerState({ mode: 'single', status: 'idle', roomId: null })}
+                                onClick={() => {
+                                    setMultiplayerState({ mode: 'single', status: 'idle', roomId: null, currentTurn: null });
+                                }}
                                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-95 ${localStatus === 'won'
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                                     : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-300'
