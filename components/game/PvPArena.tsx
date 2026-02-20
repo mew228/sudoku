@@ -22,6 +22,7 @@ export const PvPArena = () => {
         opponentStatus,
         roomId,
         playerId,
+        uid,
         setMultiplayerState
     } = useGameStore();
 
@@ -72,7 +73,7 @@ export const PvPArena = () => {
         return () => {
             unsubPlayers();
         };
-    }, [roomId, playerId, setMultiplayerState]);
+    }, [roomId, mode, playerId, uid, setMultiplayerState]);
 
     return (
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
