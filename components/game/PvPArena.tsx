@@ -152,7 +152,7 @@ export const PvPArena = () => {
                 {/* Surrender / Leave Button */}
                 <button
                     onClick={() => {
-                        useGameStore.getState().setMultiplayerState({ mode: 'single', status: 'idle', roomId: null });
+                        useGameStore.getState().setMultiplayerState({ mode: 'pvp', status: 'idle', roomId: null });
                     }}
                     className="w-full py-3 bg-slate-100 text-slate-500 hover:text-rose-500 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg text-sm font-bold transition-all active:scale-95 tracking-wide flex items-center justify-center gap-2 mt-auto md:mt-4"
                 >

@@ -266,6 +266,22 @@ export const Lobby = () => {
                     </motion.button>
                 </div>
 
+                {/* Practice against AI */}
+                <div className="mt-8">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300 text-center mb-3">No one online?</p>
+                    <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                            const { startGame, difficulty } = useGameStore.getState();
+                            startGame(difficulty, 'bot');
+                        }}
+                        className="w-full py-3 bg-white text-indigo-600 border-2 border-indigo-100 rounded-xl font-bold text-sm hover:bg-indigo-50 hover:border-indigo-200 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Swords size={16} />
+                        Practice vs AI Bot
+                    </motion.button>
+                </div>
+
                 {/* Error */}
                 <AnimatePresence>
                     {error && (

@@ -55,13 +55,6 @@ export default function Home() {
           <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">Single</span>
         </button>
         <button
-          onClick={() => startGame('Medium', 'bot')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'bot' ? 'bg-cyan-600 text-white border-cyan-600 shadow-lg shadow-cyan-100' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-cyan-200 hover:text-cyan-600'}`}
-        >
-          <Swords size={16} />
-          <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">AI Bot</span>
-        </button>
-        <button
           onClick={() => setMultiplayerState({ mode: 'pvp', status: 'idle' })}
           className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'pvp' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-indigo-200 hover:text-indigo-600'}`}
         >
@@ -70,8 +63,8 @@ export default function Home() {
         </button>
       </div>
 
-      {mode === 'pvp' ? (
-        // PvP Mode: Show Lobby or Arena
+      {(mode === 'pvp' || mode === 'bot') ? (
+        // PvP or Bot Mode: Show Lobby or Arena
         (status === 'idle' || status === 'waiting') ? (
           <Lobby />
         ) : (
