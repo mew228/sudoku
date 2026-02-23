@@ -9,18 +9,21 @@ import { Lobby } from "@/components/layout/Lobby";
 import { PvPArena } from "@/components/game/PvPArena";
 import { useGameStore } from "@/lib/store";
 import { useEffect } from "react";
-import { Users, User, Swords, Trophy, XCircle } from 'lucide-react';
+import { Users, User, Trophy, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { listenToAuth } from "@/lib/firebase/auth";
+import { useShallow } from 'zustand/react/shallow';
 
 export default function Home() {
-  const startGame = useGameStore(state => state.startGame);
-  const difficulty = useGameStore(state => state.difficulty);
-  const status = useGameStore(state => state.status);
-  const mode = useGameStore(state => state.mode);
-  const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
-  const mistakes = useGameStore(state => state.mistakes);
-  const tickTimer = useGameStore(state => state.tickTimer);
+  const { startGame, difficulty, status, mode, setMultiplayerState, mistakes, tickTimer } = useGameStore(useShallow(state => ({
+    startGame: state.startGame,
+    difficulty: state.difficulty,
+    status: state.status,
+    mode: state.mode,
+    setMultiplayerState: state.setMultiplayerState,
+    mistakes: state.mistakes,
+    tickTimer: state.tickTimer
+  })));
 
   useEffect(() => {
     // Start single player by default only if not already set
@@ -34,8 +37,8 @@ export default function Home() {
     const unsubAuth = listenToAuth((user) => {
       if (user) {
         useGameStore.setState({
-          uid: (user as any).uid,
-          playerName: (user as any).displayName || 'Guest'
+          uid: user.uid,
+          playerName: user.displayName || 'Guest'
         });
       }
     });
@@ -57,13 +60,13 @@ export default function Home() {
   }, [status, tickTimer]);
 
   return (
-    <main className="flex h-dvh flex-col items-center justify-center p-2 lg:p-4 bg-slate-50 font-sans transition-colors overflow-hidden select-none touch-none">
+    <main className="flex h-dvh flex-col items-center justify-center p-2 lg:p-4 bg-slate-50 font-sans transition-colors overflow-y-auto overflow-x-hidden select-none touch-manipulation">
 
       {/* Hint Toast */}
       <HintToast />
 
       {/* Sidebar / Mode Selection - Compact on Mobile */}
-      <div className="absolute top-2 left-2 lg:top-4 lg:left-4 flex gap-2 z-50 scale-75 lg:scale-100 origin-top-left">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex gap-2 z-50 scale-90 sm:scale-100 origin-top-left">
         <button
           onClick={() => startGame('Medium', 'single')}
           className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${mode === 'single' ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200' : 'bg-white/80 backdrop-blur text-slate-700 border-slate-200 shadow-sm hover:border-slate-300'}`}
@@ -113,8 +116,8 @@ export default function Home() {
 
             {/* Game Board Container - Strict constraints to prevent overflow */}
             <div className="relative w-full aspect-square flex-1 min-h-0 flex justify-center items-center py-2">
-              {/* Board Wrapper - Ensure it doesn't exceed parent height OR width */}
-              <div className="h-full w-full max-w-full aspect-square flex items-center justify-center">
+              {/* Board Wrapper - Premium Glassmorphism Container */}
+              <div className="h-full w-full max-w-full aspect-square flex items-center justify-center p-1 sm:p-2 bg-white rounded-2xl shadow-2xl shadow-slate-200/50 border border-white">
                 <Board />
               </div>
             </div>
@@ -143,10 +146,9 @@ export default function Home() {
               <Numpad />
             </div>
 
-            {/* New Game Button */}
             <button
               onClick={() => startGame(difficulty, mode)}
-              className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm sm:text-lg font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 tracking-wide mt-auto md:mt-4"
+              className="w-full py-4 bg-slate-900 text-white rounded-xl text-lg font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95 tracking-wide mt-2 md:mt-4 mb-4 md:mb-0"
             >
               {status === 'playing' ? 'Restart' : 'New Game'}
             </button>

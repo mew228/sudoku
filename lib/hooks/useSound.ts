@@ -6,7 +6,10 @@ export const useSound = () => {
     const playSound = useCallback((type: 'correct' | 'wrong' | 'click' | 'win') => {
         // Simple synthetic sounds using Web Audio API to avoid external assets for now
         try {
-            const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContextClass) return;
+            const context = new AudioContextClass();
             const oscillator = context.createOscillator();
             const gain = context.createGain();
 
@@ -47,7 +50,7 @@ export const useSound = () => {
                 oscillator.start(now);
                 oscillator.stop(now + 0.5);
             }
-        } catch (e) {
+        } catch {
             // Silently fail if AudioContext is not supported
         }
     }, []);

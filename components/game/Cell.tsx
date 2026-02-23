@@ -15,52 +15,55 @@ interface CellProps {
 export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
 
-    // Optimizing selectors to avoid re-renders on timer tick
-    const isSelected = useGameStore(useShallow(state => state.selectedCell?.r === r && state.selectedCell?.c === c));
-
-    // Check for related cells (same row, col, or box)
-    const isRelated = useGameStore(useShallow(state => {
+    // Consolidate selectors to avoid multiple selector calls per cell
+    const cellState = useGameStore(useShallow(state => {
         const s = state.selectedCell;
-        if (!s) return false;
-        if (s.r === r || s.c === c) return true;
-        if (Math.floor(s.r / 3) === Math.floor(r / 3) && Math.floor(s.c / 3) === Math.floor(c / 3)) return true;
-        return false;
-    }));
+        const sVal = s ? state.board[s.r][s.c] : 0;
 
-    const isSameValue = useGameStore(useShallow(state => {
-        const s = state.selectedCell;
-        if (!s) return false;
-        const sVal = state.board[s.r][s.c];
-        return sVal !== 0 && sVal === val;
-    }));
+        const isSelected = s?.r === r && s?.c === c;
+        const isRelated = s ? (s.r === r || s.c === c || (Math.floor(s.r / 3) === Math.floor(r / 3) && Math.floor(s.c / 3) === Math.floor(c / 3))) : false;
+        const isSameValue = sVal !== 0 && sVal === val;
 
-    const isError = useGameStore(state => !initial && val !== 0 && val !== state.solvedBoard[r][c]);
+        const isError = !initial && val !== 0 && val !== state.solvedBoard[r][c];
+        const isConflict = state.conflicts.has(`${r},${c}`);
 
-    // Hint glow — true when this cell was just revealed by a hint
-    const isHinted = useGameStore(state => state.lastHint?.r === r && state.lastHint?.c === c);
+        const isHinted = state.lastHint?.r === r && state.lastHint?.c === c;
+        const isHovered = state.hoveredCell?.r === r && state.hoveredCell?.c === c;
 
-    // Hover state from drag and drop
-    const isHovered = useGameStore(useShallow(state => state.hoveredCell?.r === r && state.hoveredCell?.c === c));
+        const isOpponentHovered = state.opponentHoveredCells.some(cell => cell.r === r && cell.c === c);
+        const cellOwnerUid = state.cellOwners[`${r},${c}`];
+        const isOpponentCell = cellOwnerUid && state.uid && cellOwnerUid !== state.uid;
 
-    // Opponent Hover State
-    const isOpponentHovered = useGameStore(useShallow(state =>
-        state.opponentHoveredCells.some(cell => cell.r === r && cell.c === c)
-    ));
-
-    // Cell Ownership
-    const cellOwnerUid = useGameStore(useShallow(state => state.cellOwners[`${r},${c}`]));
-    const localUid = useGameStore(useShallow(state => state.uid));
-    const isOpponentCell = cellOwnerUid && localUid && cellOwnerUid !== localUid;
-
-    // Notes logic - purely selector based
-    const cellNotes = useGameStore(useShallow(state => {
-        if (val !== 0) return [];
+        // Notes logic
         const notes = [];
-        for (let n = 1; n <= 9; n++) {
-            if (state.notes.has(`${r},${c},${n}`)) notes.push(n);
+        if (val === 0) {
+            for (let n = 1; n <= 9; n++) {
+                if (state.notes.has(`${r},${c},${n}`)) notes.push(n);
+            }
         }
-        return notes;
+
+        return {
+            isSelected,
+            isRelated,
+            isSameValue,
+            isError,
+            isConflict,
+            isHinted,
+            isOpponentCell,
+            cellNotes: notes
+        };
     }));
+
+    const {
+        isSelected,
+        isRelated,
+        isSameValue,
+        isError,
+        isConflict,
+        isHinted,
+        isOpponentCell,
+        cellNotes
+    } = cellState;
 
     const selectCell = useGameStore(state => state.selectCell);
     const { playSound } = useSound();
@@ -101,7 +104,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
             // onDrop={handleDrop} // Removed
             className={cn(
                 "relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-200",
-                "text-lg sm:text-xl md:text-2xl lg:text-3xl font-light select-none",
+                "text-2xl sm:text-3xl font-light select-none",
                 // Base Border
                 "border-[0.5px] border-slate-300",
 
@@ -120,20 +123,16 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                     ? (isSelected ? "bg-red-600 text-white" : "bg-red-100 text-red-600")
                     : isSelected
                         ? "bg-indigo-600 text-white"
-                        : isSameValue // isDragOver removed or replaced with compatible visual state if needed later
-                            ? "bg-indigo-100 text-indigo-900"
-                            : isRelated
-                                ? "bg-slate-100"
-                                : "bg-white hover:bg-slate-50",
+                        : isConflict
+                            ? "bg-orange-100 text-orange-600 font-bold"
+                            : isSameValue
+                                ? "bg-indigo-100/80 text-indigo-900 font-medium"
+                                : isRelated
+                                    ? "bg-slate-100/50"
+                                    : "bg-white hover:bg-slate-50",
 
                 // Hint Golden Glow (layered on top)
                 isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20",
-
-                // Opponent Hover Highlight (Presence)
-                isOpponentHovered && !isSelected && !isError && "ring-2 ring-rose-400 bg-rose-50/50 z-20",
-
-                // Hover Highlight (Drag & Drop)
-                isHovered && !isSelected && !isError && "bg-indigo-200 ring-2 ring-inset ring-indigo-500 z-30",
 
                 // Dynamic Borders (Override structural borders)
                 isSelected && !isError && "!border-indigo-600 z-10",
@@ -146,6 +145,23 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
             )}
         >
+            {/* Biometric Scan Animation for Hints */}
+            {isHinted && (
+                <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-sm ring-2 ring-amber-400">
+                    <motion.div
+                        initial={{ top: "-10%" }}
+                        animate={{ top: "110%" }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="absolute left-0 right-0 h-[2px] bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,1)]"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0.1 }}
+                        animate={{ opacity: [0.1, 0.3, 0.1] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                        className="absolute inset-0 bg-amber-400"
+                    />
+                </div>
+            )}
             {val !== 0 ? (
                 <motion.span
                     // Add a nice "pop" effect when value changes via drop
@@ -167,7 +183,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
                         <div key={n} className="flex items-center justify-center">
                             {cellNotes.includes(n) && (
-                                <span className="text-[9px] text-slate-500 font-medium leading-none">
+                                <span className="text-[10px] sm:text-xs text-slate-500 font-medium leading-none">
                                     {n}
                                 </span>
                             )}

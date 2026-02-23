@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGameStore } from '@/lib/store';
+import { useShallow } from 'zustand/react/shallow';
 import { Board } from './Board';
 import { GameControls } from './GameControls';
 import { Numpad } from './Numpad';
 import { Timer } from './Timer';
-import { Users, Trophy, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Users, Trophy, XCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomProvider, useStorage, useMutation, useMyPresence, useOthers } from '@/liveblocks.config';
 import { ClientSideSuspense } from '@liveblocks/react';
 import { LiveList, LiveMap, LiveObject } from '@liveblocks/client';
-import { generateSudoku, Difficulty } from '@/lib/logic/sudoku';
+import { generateSudoku } from '@/lib/logic/sudoku';
 
 const PvPArenaContent = () => {
     const {
@@ -30,7 +31,23 @@ const PvPArenaContent = () => {
         hoveredCell,
         selectedCell,
         currentTurn
-    } = useGameStore();
+    } = useGameStore(useShallow(state => ({
+        status: state.status,
+        opponentName: state.opponentName,
+        opponentProgress: state.opponentProgress,
+        mistakes: state.mistakes,
+        mode: state.mode,
+        uid: state.uid,
+        playerName: state.playerName,
+        setMultiplayerState: state.setMultiplayerState,
+        setRemoteBoard: state.setRemoteBoard,
+        setSyncAction: state.setSyncAction,
+        setCellOwners: state.setCellOwners,
+        setCurrentTurn: state.setCurrentTurn,
+        hoveredCell: state.hoveredCell,
+        selectedCell: state.selectedCell,
+        currentTurn: state.currentTurn
+    })));
 
     // Liveblocks State
     const lbStatus = useStorage((root) => root.status);
@@ -42,14 +59,17 @@ const PvPArenaContent = () => {
     const isFirebaseConnected = true; // Always connected when LB suspense renders
 
     // Presence
-    const [myPresence, updateMyPresence] = useMyPresence();
+    const [, updateMyPresence] = useMyPresence();
     const others = useOthers();
 
-    // Broadcast local hover/select state
+    // Broadcast local hover/select state - Debounced to improve drag performance
     useEffect(() => {
-        updateMyPresence({
-            hoveredCell: hoveredCell || selectedCell || null
-        });
+        const timer = setTimeout(() => {
+            updateMyPresence({
+                hoveredCell: hoveredCell || selectedCell || null
+            });
+        }, 32); // ~30fps update rate for presence is plenty
+        return () => clearTimeout(timer);
     }, [hoveredCell, selectedCell, updateMyPresence]);
 
     // Receive opponent presence
@@ -178,9 +198,11 @@ const PvPArenaContent = () => {
 
         if (lbCellOwners) {
             let ownersRecord: Record<string, string> = {};
-            if (lbCellOwners && typeof lbCellOwners.entries === 'function') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (lbCellOwners && typeof (lbCellOwners as any).entries === 'function') {
                 // It's a Map-like object from Liveblocks
-                for (const [key, val] of lbCellOwners.entries()) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                for (const [key, val] of (lbCellOwners as any).entries()) {
                     ownersRecord[key] = val;
                 }
             } else {
@@ -189,10 +211,14 @@ const PvPArenaContent = () => {
             }
             setCellOwners(ownersRecord);
         }
-    }, [lbPlayers, lbStatus, lbWinner, lbBoard, lbCellOwners, uid, playerName, localStatus, setMultiplayerState, setRemoteBoard, setCellOwners]);
+
+        if (lbCurrentTurn !== undefined) {
+            setCurrentTurn(lbCurrentTurn);
+        }
+    }, [lbPlayers, lbStatus, lbWinner, lbBoard, lbCellOwners, lbCurrentTurn, uid, playerName, localStatus, setMultiplayerState, setRemoteBoard, setCellOwners, setCurrentTurn]);
 
     return (
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-y-auto overflow-x-hidden select-none touch-manipulation">
 
             {/* Left/Top: Header & Board */}
             <div className="flex flex-col gap-2 items-center justify-center w-full md:flex-1 min-h-0 min-w-0 max-w-2xl pt-2">
@@ -365,6 +391,7 @@ export const PvPArena = () => {
         <RoomProvider
             id={roomId}
             initialPresence={{ cursor: null, hoveredCell: null }}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             initialStorage={initialStorage as any}
         >
             <ClientSideSuspense fallback={
@@ -392,7 +419,7 @@ const BotArenaContent = () => {
     } = useGameStore();
 
     return (
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-hidden select-none touch-none">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-y-auto overflow-x-hidden select-none touch-manipulation">
             {/* Left/Top: Header & Board */}
             <div className="flex flex-col gap-2 items-center justify-center w-full md:flex-1 min-h-0 min-w-0 max-w-2xl pt-2">
                 {/* Header */}

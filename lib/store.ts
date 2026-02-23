@@ -23,6 +23,7 @@ interface GameState {
     opponentHoveredCells: { r: number, c: number }[];
     cellOwners: Record<string, string>;
     currentTurn: string | null;
+    conflicts: Set<string>; // stored as "r,c"
 
     // Multiplayer
     mode: 'single' | 'pvp' | 'bot';
@@ -62,6 +63,7 @@ interface GameState {
 
     // Bot Action
     playBotMove: () => void;
+    calculateConflicts: (board: number[][]) => Set<string>;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -69,6 +71,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     initialBoard: [],
     solvedBoard: [],
     notes: new Set(),
+    conflicts: new Set(),
     difficulty: 'Medium',
     status: 'idle',
     timer: 0,
@@ -98,9 +101,34 @@ export const useGameStore = create<GameState>((set, get) => ({
     syncAction: null,
 
     setSyncAction: (fn) => set({ syncAction: fn }),
-    setRemoteBoard: (board: number[][]) => set({ board }),
+    setRemoteBoard: (board: number[][]) => {
+        const conflicts = get().calculateConflicts(board);
+        set({ board, conflicts });
+    },
     setCellOwners: (owners: Record<string, string>) => set({ cellOwners: owners }),
     setCurrentTurn: (uid: string | null) => set({ currentTurn: uid }),
+
+    calculateConflicts: (board: number[][]) => {
+        const conflicts = new Set<string>();
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const val = board[r][c];
+                if (val === 0) continue;
+
+                let hasConflict = false;
+                for (let i = 0; i < 9; i++) {
+                    if (i !== c && board[r][i] === val) hasConflict = true;
+                    if (i !== r && board[i][c] === val) hasConflict = true;
+                    const br = 3 * Math.floor(r / 3) + Math.floor(i / 3);
+                    const bc = 3 * Math.floor(c / 3) + (i % 3);
+                    if ((br !== r || bc !== c) && board[br][bc] === val) hasConflict = true;
+                    if (hasConflict) break;
+                }
+                if (hasConflict) conflicts.add(`${r},${c}`);
+            }
+        }
+        return conflicts;
+    },
 
     startGame: (difficulty: Difficulty, mode: 'single' | 'pvp' | 'bot' = 'single') => {
         const { initial, solved } = generateSudoku(difficulty);
@@ -121,7 +149,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             mode,
             opponentName: mode === 'bot' ? 'AI Bot' : null,
             uid: mode === 'bot' ? 'local-player' : get().uid, // assign dummy uid for local bot match
-            currentTurn: mode === 'bot' ? 'local-player' : null
+            currentTurn: mode === 'bot' ? 'local-player' : null,
+            conflicts: new Set()
         });
     },
 
@@ -163,7 +192,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         const newHistory = [...history, board.map(row => [...row])];
 
         if (isCorrect) {
-            set({ board: newBoard, history: newHistory });
+            const conflicts = get().calculateConflicts(newBoard);
+            set({ board: newBoard, history: newHistory, conflicts });
 
             let filled = 0;
             let allCorrect = true;
@@ -200,21 +230,23 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
 
         } else {
-            const newMistakes = mistakes + 1;
+            const updatedMistakes = mistakes + 1;
+            const conflicts = get().calculateConflicts(newBoard);
             set({
-                mistakes: newMistakes,
+                mistakes: updatedMistakes,
                 board: newBoard,
-                history: newHistory
+                history: newHistory,
+                conflicts
             });
 
-            const isLost = newMistakes >= maxMistakes;
+            const isLost = updatedMistakes >= maxMistakes;
             if (isLost) {
                 set({ status: 'lost' });
                 // Persistent Stats
-                const { uid, timer, difficulty } = get();
-                if (uid) {
+                const { uid: currentUid, timer, difficulty } = get();
+                if (currentUid) {
                     const diffKey = difficulty.toLowerCase() as keyof UserStats['bestTime'];
-                    updateUserStats(uid, false, timer, diffKey, newMistakes).catch(e => console.error("Stats Sync Failed:", e));
+                    updateUserStats(currentUid, false, timer, diffKey, updatedMistakes).catch(e => console.error("Stats Sync Failed:", e));
                 }
             }
 
@@ -229,7 +261,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
                 const action = get().syncAction;
                 if (action) {
-                    action({ type: 'CELL', r, c, val: num, progress, mistakes: newMistakes, status: isLost ? 'lost' : 'playing', switchTurn: true });
+                    action({ type: 'CELL', r, c, val: num, progress, mistakes: updatedMistakes, status: isLost ? 'lost' : 'playing', switchTurn: true });
                 }
             } else if (mode === 'bot') {
                 set({ currentTurn: 'bot' });
@@ -245,20 +277,25 @@ export const useGameStore = create<GameState>((set, get) => ({
         const { history } = get();
         if (history.length === 0) return;
         const previousBoard = history[history.length - 1];
+        const conflicts = get().calculateConflicts(previousBoard);
         set({
             board: previousBoard,
-            history: history.slice(0, -1)
+            history: history.slice(0, -1),
+            conflicts
         });
     },
 
     resetGame: () => {
         const { initialBoard } = get();
+        const board = initialBoard.map(row => [...row]);
+        const conflicts = get().calculateConflicts(board);
         set({
-            board: initialBoard.map(row => [...row]),
+            board,
             timer: 0,
             mistakes: 0,
             notes: new Set(),
             history: [],
+            conflicts,
             hintsRemaining: 3,
             lastHint: null,
             cellOwners: {},
@@ -281,6 +318,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         const newBoard = board.map(row => [...row]);
         newBoard[hint.r][hint.c] = hint.value;
+        const conflicts = get().calculateConflicts(newBoard);
 
         let isWon = true;
         for (let i = 0; i < GRID_SIZE; i++) {
@@ -353,6 +391,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
     },
 
-    setHoveredCell: (cell: { r: number, c: number } | null) => set({ hoveredCell: cell }),
+    setHoveredCell: (cell: { r: number, c: number } | null) => {
+        const current = get().hoveredCell;
+        if (cell?.r === current?.r && cell?.c === current?.c) return;
+        set({ hoveredCell: cell });
+    },
     setHighlightedNumber: (num: number | null) => set({ highlightedNumber: num })
 }));
