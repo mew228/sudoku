@@ -14,8 +14,6 @@ interface CellProps {
 
 export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
-
-    // Consolidate selectors to avoid multiple selector calls per cell
     const cellState = useGameStore(useShallow(state => {
         const s = state.selectedCell;
         const sVal = s ? state.board[s.r][s.c] : 0;
@@ -32,10 +30,10 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
         const isOpponentHovered = state.opponentHoveredCells.some(cell => cell.r === r && cell.c === c);
         const cellOwnerUid = state.cellOwners[`${r},${c}`];
-        const isOpponentCell = cellOwnerUid && state.uid && cellOwnerUid !== state.uid;
+        const isOpponentCell = !!(cellOwnerUid && state.uid && cellOwnerUid !== state.uid);
 
         // Notes logic
-        const notes = [];
+        const notes: number[] = [];
         if (val === 0) {
             for (let n = 1; n <= 9; n++) {
                 if (state.notes.has(`${r},${c},${n}`)) notes.push(n);
@@ -49,6 +47,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
             isError,
             isConflict,
             isHinted,
+            isHovered,
             isOpponentCell,
             cellNotes: notes
         };
@@ -61,6 +60,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
         isError,
         isConflict,
         isHinted,
+        isHovered,
         isOpponentCell,
         cellNotes
     } = cellState;
@@ -73,7 +73,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
         selectCell(r, c);
     };
 
-    // Subscribing to board value changes for sound feedback
+    // Sound feedback on value changes
     useEffect(() => {
         if (val === 0 || initial) return;
 
@@ -88,35 +88,27 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
         }
     }, [val, r, c, initial, playSound]);
 
-    // HTML5 DnD handlers removed in favor of Framer Motion gesture handling in Numpad.tsx
-
-
-
-
-
     return (
         <div
             onClick={handleClick}
             data-cell-row={r}
             data-cell-col={c}
-            // onDragOver={handleDragOver} // Removed
-            // onDragLeave={handleDragLeave} // Removed
-            // onDrop={handleDrop} // Removed
             className={cn(
-                "relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-200",
-                "text-2xl sm:text-3xl font-light select-none",
+                "relative flex items-center justify-center w-full h-full cursor-pointer transition-colors duration-150",
+                "text-lg sm:text-2xl md:text-3xl font-light select-none",
                 // Base Border
                 "border-[0.5px] border-slate-300",
 
                 // Thick 3x3 Borders
-                // Right border for columns 2 and 5 (0-indexed indices 2 and 5)
-                (c === 2 || c === 5) && "!border-r-2 !border-r-slate-800",
-                // Bottom border for rows 2 and 5
-                (r === 2 || r === 5) && "!border-b-2 !border-b-slate-800",
+                (c === 2 || c === 5) && "!border-r-[2px] !border-r-slate-800",
+                (r === 2 || r === 5) && "!border-b-[2px] !border-b-slate-800",
 
                 // Remove outer borders (handled by board container)
                 c === 8 && "border-r-0",
                 r === 8 && "border-b-0",
+
+                // Drag hover highlight
+                isHovered && !isSelected && "bg-indigo-100 ring-2 ring-inset ring-indigo-400 z-20",
 
                 // Backgrounds & Text Colors
                 isError
@@ -131,18 +123,16 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                                     ? "bg-slate-100/50"
                                     : "bg-white hover:bg-slate-50",
 
-                // Hint Golden Glow (layered on top)
+                // Hint Golden Glow
                 isHinted && !isSelected && !isError && "ring-2 ring-amber-400 bg-amber-50 z-20",
 
-                // Dynamic Borders (Override structural borders)
+                // Dynamic Borders
                 isSelected && !isError && "!border-indigo-600 z-10",
                 isSelected && isError && "!border-red-600 z-10",
                 !isSelected && isError && "!border-red-200",
 
-
                 // Text Color Overrides
                 initial && !isSelected && "text-slate-900 font-medium",
-
             )}
         >
             {/* Biometric Scan Animation for Hints */}
@@ -164,7 +154,6 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
             )}
             {val !== 0 ? (
                 <motion.span
-                    // Add a nice "pop" effect when value changes via drop
                     key={val}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -183,7 +172,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
                         <div key={n} className="flex items-center justify-center">
                             {cellNotes.includes(n) && (
-                                <span className="text-[10px] sm:text-xs text-slate-500 font-medium leading-none">
+                                <span className="text-[8px] sm:text-[10px] md:text-xs text-slate-500 font-medium leading-none">
                                     {n}
                                 </span>
                             )}

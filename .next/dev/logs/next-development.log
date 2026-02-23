@@ -1,62 +1,6 @@
-[00:00:03.106] Server  LOG     ✓ Ready in 2.2s
-[00:00:05.939] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:06.578] Browser ERROR   uncaughtError: Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
-
-- A server/client branch `if (typeof window !== 'undefined')`.
-- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
-- Date formatting in a user's locale which doesn't match the server.
-- External changing data without sending a snapshot of it along with the HTML.
-- Invalid HTML tag nesting.
-
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-https://react.dev/link/hydration-mismatch
-
-  ...
-    <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
-      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
-        <LoadingBoundary name="/" loading={null}>
-          <HTTPAccessFallbackBoundary notFound={<SegmentViewNode>} forbidden={undefined} unauthorized={undefined}>
-            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<SegmentViewNode>} forbidden={undefined} ...>
-              <RedirectBoundary>
-                <RedirectErrorBoundary router={{...}}>
-                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} ...>
-                    <SegmentViewNode type="page" pagePath="page.tsx">
-                      <SegmentTrieNode>
-                      <ClientPageRoot Component={function Home} serverProvidedParams={{...}}>
-                        <Home params={Promise} searchParams={Promise}>
-                          <main className="flex h-dvh...">
-                            <HintToast>
-                            <div className="absolute t...">
-                              <button>
-                              <button
-                                onClick={function onClick}
-+                               className="flex items-center gap-2 px-4 py-2 rounded-full transition-all border bg-whi..."
--                               className="flex items-center gap-2 px-4 py-2 rounded-full transition-all border bg-whi..."
-                              >
-                                <Swords size={16}>
-                                  <svg
-                                    ref={null}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width={16}
-                                    height={16}
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-+                                   className="lucide lucide-swords"
--                                   className="lucide lucide-users"
-                                    aria-hidden="true"
-                                  >
-+                                   <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5">
--                                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2">
-                                    ...
-                                ...
-                              ...
-                            ...
-                    ...
-                  ...
-      ...
-
+[00:00:02.611] Server  LOG     ✓ Ready in 1824ms
+[00:00:05.663] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:05.919] Browser ERROR   uncaughtError: ChunkLoadError: Failed to load chunk /_next/static/chunks/_60bad9a7._.js from module [project]/node_modules/next/dist/compiled/react-server-dom-turbopack/cjs/react-server-dom-turbopack-client.browser.development.js [app-client] (ecmascript)
+[00:00:50.861] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:52.203] Browser ERROR   The result of getSnapshot should be cached to avoid an infinite loop
+[00:00:52.203] Browser ERROR   uncaughtError: Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.

@@ -13,11 +13,10 @@ const LocalHoverHighlight = () => {
             style={{
                 gridRow: hoveredCell.r + 1,
                 gridColumn: hoveredCell.c + 1,
-                pointerEvents: 'none'
             }}
-            className="absolute inset-0 bg-indigo-500/20 ring-2 ring-inset ring-indigo-500 z-30 flex items-center justify-center"
+            className="bg-indigo-500/20 ring-2 ring-inset ring-indigo-500 z-30 pointer-events-none flex items-center justify-center rounded-sm"
         >
-            <div className="w-full h-full bg-indigo-500/10 animate-pulse" />
+            <div className="w-full h-full bg-indigo-500/10 animate-pulse rounded-sm" />
         </div>
     );
 };
@@ -34,9 +33,8 @@ const OpponentHoverHighlight = () => {
                     style={{
                         gridRow: cell.r + 1,
                         gridColumn: cell.c + 1,
-                        pointerEvents: 'none'
                     }}
-                    className="absolute inset-0 bg-rose-500/20 ring-2 ring-inset ring-rose-400 z-20"
+                    className="bg-rose-500/20 ring-2 ring-inset ring-rose-400 z-20 pointer-events-none rounded-sm"
                 />
             ))}
         </>
@@ -44,7 +42,6 @@ const OpponentHoverHighlight = () => {
 };
 
 export const Board = memo(() => {
-    // Simplified selectors with shallow check
     const { board, initialBoard, startGame } = useGameStore(useShallow(state => ({
         board: state.board,
         initialBoard: state.initialBoard,
@@ -52,7 +49,6 @@ export const Board = memo(() => {
     })));
 
     useEffect(() => {
-        // Start game on mount if empty
         if (board.length === 0) {
             startGame('Medium');
         }
@@ -64,7 +60,7 @@ export const Board = memo(() => {
         <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-xl aspect-square bg-slate-800 p-1 rounded-sm shadow-2xl overflow-hidden"
+            className="w-full max-w-xl aspect-square bg-slate-800 p-[2px] sm:p-1 rounded-sm shadow-2xl overflow-hidden"
         >
             <div className="sudoku-board relative grid grid-cols-9 grid-rows-9 h-full w-full bg-white touch-manipulation">
                 {board.map((row, r) => (
@@ -86,3 +82,5 @@ export const Board = memo(() => {
         </motion.div>
     );
 });
+
+Board.displayName = 'Board';

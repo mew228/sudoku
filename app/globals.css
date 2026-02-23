@@ -26,18 +26,45 @@
   --button-secondary-hover: #e2e8f0; /* Slate 200 */
 }
 
-/* Force light theme even if system prefers dark for now to satisfy user request */
-/* @media (prefers-color-scheme: dark) { ... } REMOVED TO FORCE LIGHT */
-
+/* Force light theme */
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent pull-to-refresh and bounce on mobile */
+  overflow: hidden;
+}
+
+/* Prevent text selection and callouts on mobile during drag */
+* {
+  -webkit-touch-callout: none;
 }
 
 @layer utilities {
   .glass-panel {
     @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+}
+
+/* Shake animation for incorrect cells */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Safe area support for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
   }
 }

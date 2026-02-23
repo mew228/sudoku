@@ -50,12 +50,12 @@ const PvPArenaContent = () => {
     })));
 
     // Liveblocks State
-    const lbStatus = useStorage((root) => root.status);
-    const lbWinner = useStorage((root) => root.winner);
-    const lbBoard = useStorage((root) => root.board);
-    const lbPlayers = useStorage((root) => root.players);
-    const lbCellOwners = useStorage((root) => root.cellOwners);
-    const lbCurrentTurn = useStorage((root) => root.currentTurn);
+    const lbStatus = useStorage((root: any) => root.status);
+    const lbWinner = useStorage((root: any) => root.winner);
+    const lbBoard = useStorage((root: any) => root.board);
+    const lbPlayers = useStorage((root: any) => root.players);
+    const lbCellOwners = useStorage((root: any) => root.cellOwners);
+    const lbCurrentTurn = useStorage((root: any) => root.currentTurn);
     const isFirebaseConnected = true; // Always connected when LB suspense renders
 
     // Presence
@@ -75,14 +75,14 @@ const PvPArenaContent = () => {
     // Receive opponent presence
     useEffect(() => {
         const opponentCells = others
-            .map(other => other.presence.hoveredCell)
+            .map((other: any) => other.presence?.hoveredCell)
             .filter(Boolean) as { r: number, c: number }[];
 
         useGameStore.setState({ opponentHoveredCells: opponentCells });
     }, [others]);
 
     // Join room mutation: adds player to the LiveMap
-    const joinRoom = useMutation(({ storage }, playerUid: string, name: string) => {
+    const joinRoom = useMutation(({ storage }: { storage: any }, playerUid: string, name: string) => {
         const players = storage.get("players");
         if (!players.has(playerUid)) {
             players.set(playerUid, new LiveObject({
@@ -103,7 +103,7 @@ const PvPArenaContent = () => {
     }, []);
 
     // Sync Action: called when the local player makes a move
-    const syncToLiveblocks = useMutation(({ storage }, action: Parameters<NonNullable<ReturnType<typeof useGameStore.getState>['syncAction']>>[0]) => {
+    const syncToLiveblocks = useMutation(({ storage }: { storage: any }, action: Parameters<NonNullable<ReturnType<typeof useGameStore.getState>['syncAction']>>[0]) => {
         if (!uid) return;
 
         // Update board and cell ownership
