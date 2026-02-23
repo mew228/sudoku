@@ -1,6 +1,0 @@
-[00:00:02.611] Server  LOG     ✓ Ready in 1824ms
-[00:00:05.663] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:05.919] Browser ERROR   uncaughtError: ChunkLoadError: Failed to load chunk /_next/static/chunks/_60bad9a7._.js from module [project]/node_modules/next/dist/compiled/react-server-dom-turbopack/cjs/react-server-dom-turbopack-client.browser.development.js [app-client] (ecmascript)
-[00:00:50.861] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:52.203] Browser ERROR   The result of getSnapshot should be cached to avoid an infinite loop
-[00:00:52.203] Browser ERROR   uncaughtError: Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
