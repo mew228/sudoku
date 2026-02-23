@@ -12,18 +12,16 @@ import { useEffect } from "react";
 import { Users, User, Trophy, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { listenToAuth } from "@/lib/firebase/auth";
-import { useShallow } from 'zustand/react/shallow';
 
 export default function Home() {
-  const { startGame, difficulty, status, mode, setMultiplayerState, mistakes, tickTimer } = useGameStore(useShallow(state => ({
-    startGame: state.startGame,
-    difficulty: state.difficulty,
-    status: state.status,
-    mode: state.mode,
-    setMultiplayerState: state.setMultiplayerState,
-    mistakes: state.mistakes,
-    tickTimer: state.tickTimer
-  })));
+  // Individual atomic selectors — no useShallow needed
+  const startGame = useGameStore(state => state.startGame);
+  const difficulty = useGameStore(state => state.difficulty);
+  const status = useGameStore(state => state.status);
+  const mode = useGameStore(state => state.mode);
+  const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
+  const mistakes = useGameStore(state => state.mistakes);
+  const tickTimer = useGameStore(state => state.tickTimer);
 
   useEffect(() => {
     if (status === 'idle' && mode === 'single') {
@@ -60,7 +58,7 @@ export default function Home() {
       {/* Hint Toast */}
       <HintToast />
 
-      {/* Mode Selection - Compact on Mobile */}
+      {/* Mode Selection */}
       <div className="flex gap-1.5 sm:gap-2 z-50 w-full justify-start mb-1 sm:mb-2 shrink-0">
         <button
           onClick={() => startGame('Medium', 'single')}
@@ -85,7 +83,7 @@ export default function Home() {
           <PvPArena />
         )
       ) : (
-        // Single Player Mode - Mobile-first vertical layout
+        // Single Player Mode
         <div className="flex flex-col items-center w-full max-w-2xl flex-1 min-h-0 gap-1 sm:gap-2">
 
           {/* Difficulty & Timer Row */}
@@ -106,14 +104,14 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Game Board - Constrained to available space */}
+          {/* Game Board */}
           <div className="w-full flex-1 min-h-0 flex justify-center items-center">
             <div className="w-full max-h-full aspect-square flex items-center justify-center p-0.5 sm:p-1 bg-white rounded-xl sm:rounded-2xl shadow-xl shadow-slate-200/50 border border-white">
               <Board />
             </div>
           </div>
 
-          {/* Bottom Controls - Fixed to bottom on mobile */}
+          {/* Bottom Controls */}
           <div className="flex flex-col gap-1 sm:gap-2 w-full shrink-0 pb-1">
 
             {/* Stats Row */}
@@ -126,7 +124,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Action Buttons - Scaled for mobile */}
+            {/* Action Buttons */}
             <div className="scale-[0.85] sm:scale-100 origin-center">
               <GameControls />
             </div>

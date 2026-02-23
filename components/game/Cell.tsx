@@ -1,8 +1,7 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useGameStore } from '@/lib/store';
-import { useShallow } from 'zustand/react/shallow';
 import { useSound } from '@/lib/hooks/useSound';
 
 interface CellProps {
@@ -14,59 +13,47 @@ interface CellProps {
 
 export const Cell = memo(({ r, c, val, initial }: CellProps) => {
 
-    const cellState = useGameStore(useShallow(state => {
-        const s = state.selectedCell;
-        const sVal = s ? state.board[s.r][s.c] : 0;
-
-        const isSelected = s?.r === r && s?.c === c;
-        const isRelated = s ? (s.r === r || s.c === c || (Math.floor(s.r / 3) === Math.floor(r / 3) && Math.floor(s.c / 3) === Math.floor(c / 3))) : false;
-        const isSameValue = sVal !== 0 && sVal === val;
-
-        const isError = !initial && val !== 0 && val !== state.solvedBoard[r][c];
-        const isConflict = state.conflicts.has(`${r},${c}`);
-
-        const isHinted = state.lastHint?.r === r && state.lastHint?.c === c;
-        const isHovered = state.hoveredCell?.r === r && state.hoveredCell?.c === c;
-
-        const isOpponentHovered = state.opponentHoveredCells.some(cell => cell.r === r && cell.c === c);
-        const cellOwnerUid = state.cellOwners[`${r},${c}`];
-        const isOpponentCell = !!(cellOwnerUid && state.uid && cellOwnerUid !== state.uid);
-
-        // Notes logic
-        const notes: number[] = [];
-        if (val === 0) {
-            for (let n = 1; n <= 9; n++) {
-                if (state.notes.has(`${r},${c},${n}`)) notes.push(n);
-            }
-        }
-
-        return {
-            isSelected,
-            isRelated,
-            isSameValue,
-            isError,
-            isConflict,
-            isHinted,
-            isHovered,
-            isOpponentCell,
-            cellNotes: notes
-        };
-    }));
-
-    const {
-        isSelected,
-        isRelated,
-        isSameValue,
-        isError,
-        isConflict,
-        isHinted,
-        isHovered,
-        isOpponentCell,
-        cellNotes
-    } = cellState;
-
+    // Use individual selectors to avoid creating new objects that break memoization
+    const selectedCell = useGameStore(state => state.selectedCell);
+    const solvedBoard = useGameStore(state => state.solvedBoard);
+    const conflicts = useGameStore(state => state.conflicts);
+    const lastHint = useGameStore(state => state.lastHint);
+    const hoveredCell = useGameStore(state => state.hoveredCell);
+    const opponentHoveredCells = useGameStore(state => state.opponentHoveredCells);
+    const cellOwnersMap = useGameStore(state => state.cellOwners);
+    const uid = useGameStore(state => state.uid);
+    const notesSet = useGameStore(state => state.notes);
+    const board = useGameStore(state => state.board);
     const selectCell = useGameStore(state => state.selectCell);
     const { playSound } = useSound();
+
+    // Derive values using useMemo to avoid infinite re-renders
+    const s = selectedCell;
+    const sVal = s && board.length > 0 ? board[s.r]?.[s.c] ?? 0 : 0;
+
+    const isSelected = s?.r === r && s?.c === c;
+    const isRelated = s ? (s.r === r || s.c === c || (Math.floor(s.r / 3) === Math.floor(r / 3) && Math.floor(s.c / 3) === Math.floor(c / 3))) : false;
+    const isSameValue = sVal !== 0 && sVal === val;
+
+    const isError = !initial && val !== 0 && solvedBoard.length > 0 && val !== solvedBoard[r]?.[c];
+    const isConflict = conflicts.has(`${r},${c}`);
+
+    const isHinted = lastHint?.r === r && lastHint?.c === c;
+    const isHovered = hoveredCell?.r === r && hoveredCell?.c === c;
+
+    const isOpponentHovered = opponentHoveredCells.some(cell => cell.r === r && cell.c === c);
+    const cellOwnerUid = cellOwnersMap[`${r},${c}`];
+    const isOpponentCell = !!(cellOwnerUid && uid && cellOwnerUid !== uid);
+
+    // Notes - memoized to avoid creating new arrays
+    const cellNotes = useMemo(() => {
+        if (val !== 0) return [];
+        const notes: number[] = [];
+        for (let n = 1; n <= 9; n++) {
+            if (notesSet.has(`${r},${c},${n}`)) notes.push(n);
+        }
+        return notes;
+    }, [val, r, c, notesSet]);
 
     const handleClick = () => {
         playSound('click');
@@ -76,8 +63,9 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
     // Sound feedback on value changes
     useEffect(() => {
         if (val === 0 || initial) return;
+        if (solvedBoard.length === 0) return;
 
-        const solvedVal = useGameStore.getState().solvedBoard[r][c];
+        const solvedVal = solvedBoard[r]?.[c];
         if (val === solvedVal) {
             playSound('correct');
         } else {
@@ -86,7 +74,7 @@ export const Cell = memo(({ r, c, val, initial }: CellProps) => {
                 window.navigator.vibrate([50, 50, 50]);
             }
         }
-    }, [val, r, c, initial, playSound]);
+    }, [val, r, c, initial, playSound, solvedBoard]);
 
     return (
         <div

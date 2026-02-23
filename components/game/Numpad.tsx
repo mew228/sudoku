@@ -1,14 +1,15 @@
 import { useRef, memo, useCallback, useMemo, useEffect } from "react";
 import { useGameStore } from "@/lib/store";
-import { useShallow } from 'zustand/react/shallow';
 import { motion } from "framer-motion";
 import { useSound } from "@/lib/hooks/useSound";
 
 export const Numpad = memo(() => {
-    const { setCellValue, isOpponentTurn } = useGameStore(useShallow(state => ({
-        setCellValue: state.setCellValue,
-        isOpponentTurn: state.mode === 'pvp' && state.currentTurn !== null && state.uid !== state.currentTurn
-    })));
+    const setCellValue = useGameStore(state => state.setCellValue);
+    const mode = useGameStore(state => state.mode);
+    const currentTurn = useGameStore(state => state.currentTurn);
+    const uid = useGameStore(state => state.uid);
+
+    const isOpponentTurn = mode === 'pvp' && currentTurn !== null && uid !== currentTurn;
 
     const { playSound } = useSound();
     const numbers = useMemo(() => [1, 2, 3, 4, 5, 6, 7, 8, 9], []);
@@ -20,7 +21,7 @@ export const Numpad = memo(() => {
     const isDraggingRef = useRef(false);
     const startPosRef = useRef<{ x: number; y: number } | null>(null);
 
-    const DRAG_THRESHOLD = 8; // pixels before drag activates
+    const DRAG_THRESHOLD = 8;
 
     const getCellFromPoint = useCallback((clientX: number, clientY: number) => {
         const rect = boardRectRef.current;
@@ -36,7 +37,6 @@ export const Numpad = memo(() => {
     }, []);
 
     const createGhost = useCallback((num: number, x: number, y: number) => {
-        // Remove any existing ghost
         if (ghostRef.current) {
             ghostRef.current.remove();
         }
@@ -87,16 +87,13 @@ export const Numpad = memo(() => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Save start position for threshold detection
         startPosRef.current = { x: e.clientX, y: e.clientY };
         dragNumRef.current = num;
         isDraggingRef.current = false;
 
-        // Cache board rect
         const boardEl = document.querySelector('.sudoku-board');
         boardRectRef.current = boardEl?.getBoundingClientRect() ?? null;
 
-        // Capture pointer on the target
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
     }, [isOpponentTurn]);
 
@@ -107,12 +104,10 @@ export const Numpad = memo(() => {
         const clientX = e.clientX;
         const clientY = e.clientY;
 
-        // Check if we've exceeded the drag threshold
         if (!isDraggingRef.current && startPosRef.current) {
             const dx = clientX - startPosRef.current.x;
             const dy = clientY - startPosRef.current.y;
             if (Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return;
-            // Threshold exceeded — activate drag
             isDraggingRef.current = true;
             createGhost(dragNumRef.current, clientX, clientY);
         }
@@ -121,7 +116,6 @@ export const Numpad = memo(() => {
 
         moveGhost(clientX, clientY);
 
-        // Update hovered cell
         const cell = getCellFromPoint(clientX, clientY);
         const currentHover = useGameStore.getState().hoveredCell;
 
@@ -139,7 +133,6 @@ export const Numpad = memo(() => {
         const num = dragNumRef.current;
         const wasDragging = isDraggingRef.current;
 
-        // Clean up
         removeGhost();
         useGameStore.getState().setHoveredCell(null);
         boardRectRef.current = null;
@@ -148,7 +141,6 @@ export const Numpad = memo(() => {
         startPosRef.current = null;
 
         if (wasDragging) {
-            // Drop on cell
             const cellCoords = getCellFromPoint(e.clientX, e.clientY);
             if (cellCoords) {
                 const state = useGameStore.getState();
@@ -159,7 +151,6 @@ export const Numpad = memo(() => {
                 }
             }
         } else {
-            // Simple tap — place number in selected cell
             playSound('click');
             setCellValue(num);
         }
@@ -174,7 +165,6 @@ export const Numpad = memo(() => {
         startPosRef.current = null;
     }, [removeGhost]);
 
-    // Cleanup ghost on unmount
     useEffect(() => {
         return () => {
             if (ghostRef.current) {

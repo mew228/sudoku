@@ -1,7 +1,6 @@
 import { useEffect, memo } from 'react';
 import { Cell } from './Cell';
 import { useGameStore } from '@/lib/store';
-import { useShallow } from 'zustand/react/shallow';
 import { motion } from 'framer-motion';
 
 const LocalHoverHighlight = () => {
@@ -42,11 +41,9 @@ const OpponentHoverHighlight = () => {
 };
 
 export const Board = memo(() => {
-    const { board, initialBoard, startGame } = useGameStore(useShallow(state => ({
-        board: state.board,
-        initialBoard: state.initialBoard,
-        startGame: state.startGame
-    })));
+    const board = useGameStore(state => state.board);
+    const initialBoard = useGameStore(state => state.initialBoard);
+    const startGame = useGameStore(state => state.startGame);
 
     useEffect(() => {
         if (board.length === 0) {
@@ -70,7 +67,7 @@ export const Board = memo(() => {
                             r={r}
                             c={c}
                             val={val}
-                            initial={initialBoard[r][c] !== 0}
+                            initial={initialBoard[r]?.[c] !== 0}
                         />
                     ))
                 ))}

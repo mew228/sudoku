@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '@/lib/store';
-import { useShallow } from 'zustand/react/shallow';
 import { Board } from './Board';
 import { GameControls } from './GameControls';
 import { Numpad } from './Numpad';
@@ -15,39 +14,22 @@ import { LiveList, LiveMap, LiveObject } from '@liveblocks/client';
 import { generateSudoku } from '@/lib/logic/sudoku';
 
 const PvPArenaContent = () => {
-    const {
-        status: localStatus,
-        opponentName,
-        opponentProgress,
-        mistakes,
-        mode,
-        uid,
-        playerName,
-        setMultiplayerState,
-        setRemoteBoard,
-        setSyncAction,
-        setCellOwners,
-        setCurrentTurn,
-        hoveredCell,
-        selectedCell,
-        currentTurn
-    } = useGameStore(useShallow(state => ({
-        status: state.status,
-        opponentName: state.opponentName,
-        opponentProgress: state.opponentProgress,
-        mistakes: state.mistakes,
-        mode: state.mode,
-        uid: state.uid,
-        playerName: state.playerName,
-        setMultiplayerState: state.setMultiplayerState,
-        setRemoteBoard: state.setRemoteBoard,
-        setSyncAction: state.setSyncAction,
-        setCellOwners: state.setCellOwners,
-        setCurrentTurn: state.setCurrentTurn,
-        hoveredCell: state.hoveredCell,
-        selectedCell: state.selectedCell,
-        currentTurn: state.currentTurn
-    })));
+    // Individual atomic selectors — no useShallow
+    const localStatus = useGameStore(state => state.status);
+    const opponentName = useGameStore(state => state.opponentName);
+    const opponentProgress = useGameStore(state => state.opponentProgress);
+    const mistakes = useGameStore(state => state.mistakes);
+    const mode = useGameStore(state => state.mode);
+    const uid = useGameStore(state => state.uid);
+    const playerName = useGameStore(state => state.playerName);
+    const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
+    const setRemoteBoard = useGameStore(state => state.setRemoteBoard);
+    const setSyncAction = useGameStore(state => state.setSyncAction);
+    const setCellOwners = useGameStore(state => state.setCellOwners);
+    const setCurrentTurn = useGameStore(state => state.setCurrentTurn);
+    const hoveredCell = useGameStore(state => state.hoveredCell);
+    const selectedCell = useGameStore(state => state.selectedCell);
+    const currentTurn = useGameStore(state => state.currentTurn);
 
     // Liveblocks State
     const lbStatus = useStorage((root: any) => root.status);
@@ -407,16 +389,15 @@ export const PvPArena = () => {
 };
 
 const BotArenaContent = () => {
-    const {
-        status: localStatus,
-        opponentName,
-        opponentProgress,
-        mistakes,
-        mode,
-        uid,
-        currentTurn,
-        setMultiplayerState
-    } = useGameStore();
+    // Individual atomic selectors
+    const localStatus = useGameStore(state => state.status);
+    const opponentName = useGameStore(state => state.opponentName);
+    const opponentProgress = useGameStore(state => state.opponentProgress);
+    const mistakes = useGameStore(state => state.mistakes);
+    const mode = useGameStore(state => state.mode);
+    const uid = useGameStore(state => state.uid);
+    const currentTurn = useGameStore(state => state.currentTurn);
+    const setMultiplayerState = useGameStore(state => state.setMultiplayerState);
 
     return (
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-7xl h-dvh p-2 overflow-y-auto overflow-x-hidden select-none touch-manipulation">
